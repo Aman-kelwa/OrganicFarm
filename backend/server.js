@@ -5,6 +5,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 
 import userRoutes from "./routes/userRoutes.js";
+import listingRoutes from "./routes/listingRoutes.js";
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ connectDB();
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/listings", listingRoutes);
 
 app.get("/", (req, res) => {
   res.send("OrganicFarm API Running...");
