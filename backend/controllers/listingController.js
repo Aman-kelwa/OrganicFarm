@@ -115,3 +115,60 @@ export const deleteListing = async (req, res) => {
     });
   }
 };
+
+//Update listing
+
+export const updateListing = async (req, res) => {
+  try {
+    const listing = await Listing.findById(req.params.id);
+
+    if (!listing) {
+      return res.status(404).json({
+        message: "Listing not found",
+      });
+    }
+
+    if (listing.owner.toString() !== req.user._id.toString()) {
+      return res.status(401).json({
+        message: "Not Authorized",
+      });
+    }
+
+    const updatedListing = await Listing.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      listing: updatedListing,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+//seperate listing
+export const getMyListings = async (req, res) => {
+  try {
+    const listings = await Listing.find({
+      owner: req.user._id,
+    });
+
+    res.status(200).json({
+      success: true,
+      count: listings.length,
+      listings,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
