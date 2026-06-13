@@ -1,7 +1,7 @@
 import express from "express";
 
 import protect from "../middleware/authMiddleware.js";
-
+import authorizeRoles from "../middleware/roleMiddleware.js";
 import {
   createListing,
   getAllListings,
@@ -19,7 +19,7 @@ router.get("/my", protect, getMyListings);
 
 router.get("/:id", getListingById);
 
-router.post("/", protect, createListing);
+router.post("/", protect, authorizeRoles("seller"), createListing);
 
 router.delete("/:id", protect, deleteListing);
 
