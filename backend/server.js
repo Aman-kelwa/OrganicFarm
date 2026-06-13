@@ -1,13 +1,14 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+dotenv.config();
+console.log("Cloud Name:", process.env.CLOUDINARY_CLOUD_NAME);
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 
 import userRoutes from "./routes/userRoutes.js";
 import listingRoutes from "./routes/listingRoutes.js";
-
-dotenv.config();
+import uploadRoutes from "./routes/uploadRoutes.js";
 
 const app = express();
 
@@ -19,6 +20,8 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/listings", listingRoutes);
+
+app.use("/api/upload", uploadRoutes);
 
 app.get("/", (req, res) => {
   res.send("OrganicFarm API Running...");
