@@ -53,6 +53,7 @@ const listingSchema = new mongoose.Schema(
     quantity: {
       type: Number,
       default: 1,
+      min: 0,
     },
 
     quantityType: {

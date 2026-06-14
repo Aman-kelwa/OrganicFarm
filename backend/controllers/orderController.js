@@ -13,6 +13,12 @@ export const createOrder = async (req, res) => {
       });
     }
 
+    if (quantity > listing.quantity) {
+      return res.status(400).json({
+        message: `Only ${listing.quantity} ${listing.quantityType} available`,
+      });
+    }
+
     const totalPrice = listing.price * quantity;
 
     const order = await Order.create({
@@ -30,6 +36,119 @@ export const createOrder = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Order Created Successfully",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+//get orders
+
+export const getMyOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      buyer: req.user._id,
+    })
+      .populate("listing", "title price image")
+      .populate("seller", "name email")
+      .sort({
+        createdAt: -1,
+      });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+//seller see orders
+export const getSellerOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({
+      seller: req.user._id,
+    })
+      .populate("buyer", "name email")
+      .populate("listing", "title image price")
+      .sort({
+        createdAt: -1,
+      });
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      orders,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+//update status
+export const updateOrderStatus = async (req, res) => {
+  try {
+    const { orderStatus } = req.body;
+
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Only seller can update his orders
+    if (order.seller.toString() !== req.user._id.toString()) {
+      return res.status(401).json({
+        message: "Not Authorized",
+      });
+    }
+
+    // Reduce inventory when order gets confirmed
+    if (order.orderStatus !== "confirmed" && orderStatus === "confirmed") {
+      const listing = await Listing.findById(order.listing);
+
+      if (!listing) {
+        return res.status(404).json({
+          message: "Listing not found",
+        });
+      }
+
+      // Stock validation
+      if (listing.quantity < order.quantity) {
+        return res.status(400).json({
+          message: `Only ${listing.quantity} ${listing.quantityType} available`,
+        });
+      }
+
+      // Reduce stock
+      listing.quantity = listing.quantity - order.quantity;
+
+      // Mark unavailable if stock becomes 0
+      if (listing.quantity === 0) {
+        listing.available = false;
+      }
+
+      await listing.save();
+    }
+
+    order.orderStatus = orderStatus;
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order status updated",
       order,
     });
   } catch (error) {
