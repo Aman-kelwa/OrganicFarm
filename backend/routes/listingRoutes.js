@@ -9,6 +9,7 @@ import {
   getMyListings,
   updateListing,
   deleteListing,
+  createListingReview,
 } from "../controllers/listingController.js";
 
 const router = express.Router();
@@ -24,5 +25,12 @@ router.post("/", protect, authorizeRoles("seller"), createListing);
 router.delete("/:id", protect, deleteListing);
 
 router.put("/:id", protect, updateListing);
+
+router.post(
+  "/:id/reviews",
+  protect,
+  authorizeRoles("buyer", "seller"),
+  createListingReview,
+);
 
 export default router;

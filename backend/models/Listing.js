@@ -70,6 +70,40 @@ const listingSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    reviews: [
+      {
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+
+        name: {
+          type: String,
+          required: true,
+        },
+
+        rating: {
+          type: Number,
+          required: true,
+        },
+
+        comment: {
+          type: String,
+          required: true,
+        },
+      },
+    ],
+
+    numReviews: {
+      type: Number,
+      default: 0,
+    },
+
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
   },
   {
     timestamps: true,

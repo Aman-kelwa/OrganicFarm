@@ -157,3 +157,59 @@ export const updateOrderStatus = async (req, res) => {
     });
   }
 };
+
+//cancle order
+export const cancelOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Only buyer can cancel
+    if (order.buyer.toString() !== req.user._id.toString()) {
+      return res.status(401).json({
+        message: "Not Authorized",
+      });
+    }
+
+    // Prevent multiple cancellations
+    if (order.orderStatus === "cancelled") {
+      return res.status(400).json({
+        message: "Order already cancelled",
+      });
+    }
+
+    // Restore stock
+    const listing = await Listing.findById(order.listing);
+
+    if (listing) {
+      listing.quantity += order.quantity;
+
+      listing.available = true;
+
+      await listing.save();
+    }
+
+    order.orderStatus = "cancelled";
+
+    console.log("Logged User:", req.user._id);
+
+    console.log("Order Buyer:", order.buyer);
+
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Order cancelled successfully",
+      order,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
