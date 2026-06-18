@@ -1,5 +1,6 @@
 import Order from "../models/Order.js";
 import Listing from "../models/Listing.js";
+import Notification from "../models/Notification.js";
 
 export const createOrder = async (req, res) => {
   try {
@@ -31,6 +32,14 @@ export const createOrder = async (req, res) => {
       quantity,
 
       totalPrice,
+    });
+
+    await Notification.create({
+      user: listing.owner,
+
+      message: `New order received for ${listing.title}`,
+
+      type: "order",
     });
 
     res.status(201).json({
@@ -201,6 +210,13 @@ export const cancelOrder = async (req, res) => {
     console.log("Order Buyer:", order.buyer);
 
     await order.save();
+    await Notification.create({
+      user: order.seller,
+
+      message: "An order has been cancelled.",
+
+      type: "order",
+    });
 
     res.status(200).json({
       success: true,

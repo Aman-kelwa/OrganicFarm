@@ -20,7 +20,7 @@ export const getSellerDashboard = async (req, res) => {
     ).length;
 
     const completedOrders = orders.filter(
-      (order) => order.orderStatus === "completed",
+      (order) => order.orderStatus === "confirmed",
     ).length;
 
     // Revenue
@@ -68,7 +68,7 @@ export const getBuyerDashboard = async (req, res) => {
     ).length;
 
     const completedOrders = orders.filter(
-      (order) => order.orderStatus === "completed",
+      (order) => order.orderStatus === "confirmed",
     ).length;
 
     const totalSpent = orders.reduce((sum, order) => sum + order.totalPrice, 0);
