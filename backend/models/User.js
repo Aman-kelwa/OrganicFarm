@@ -20,6 +20,16 @@ const userSchema = new mongoose.Schema(
       required: [true, "Password is required"],
     },
 
+    googleId: {
+      type: String,
+      default: "",
+    },
+
+    avatar: {
+      type: String,
+      default: "",
+    },
+
     role: {
       type: String,
       enum: ["seller", "buyer"],

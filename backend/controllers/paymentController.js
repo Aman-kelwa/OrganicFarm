@@ -132,8 +132,6 @@ export const verifyPayment = async (req, res) => {
       type: "payment",
     });
 
-    console.log("Buyer notification created");
-
     res.status(200).json({
       success: true,
       message: "Payment verified and orders created successfully",
