@@ -11,6 +11,9 @@ import Listings from "./pages/Listings";
 import ListingDetails from "./pages/ListingDetails";
 import Cart from "./pages/Cart";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import MyListings from "./pages/MyListings";
+import AddListing from "./pages/AddListing";
+import EditListing from "./pages/EditListing";
 
 function App() {
   return (
@@ -52,6 +55,33 @@ function App() {
           element={
             <ProtectedRoute role={"seller"}>
               <SellerDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/my-listings"
+          element={
+            <ProtectedRoute role="seller">
+              <MyListings />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/add-listing"
+          element={
+            <ProtectedRoute role="seller">
+              <AddListing />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/edit-listing/:id"
+          element={
+            <ProtectedRoute role="seller">
+              <EditListing />
             </ProtectedRoute>
           }
         />

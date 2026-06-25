@@ -11,8 +11,17 @@ import {
   deleteListing,
   createListingReview,
 } from "../controllers/listingController.js";
+import upload from "../middleware/uploadMiddleware.js";
 
 const router = express.Router();
+
+router.post(
+  "/",
+  protect,
+  authorizeRoles("seller"),
+  upload.single("image"),
+  createListing,
+);
 
 router.get("/", getAllListings);
 
@@ -20,11 +29,15 @@ router.get("/my", protect, getMyListings);
 
 router.get("/:id", getListingById);
 
-router.post("/", protect, authorizeRoles("seller"), createListing);
-
 router.delete("/:id", protect, deleteListing);
 
-router.put("/:id", protect, updateListing);
+router.put(
+  "/:id",
+  protect,
+  authorizeRoles("seller"),
+  upload.single("image"),
+  updateListing,
+);
 
 router.post(
   "/:id/reviews",

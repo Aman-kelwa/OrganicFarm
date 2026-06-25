@@ -1,4 +1,3 @@
-import { json } from "express";
 import Listing from "../models/Listing.js";
 
 //create listing
@@ -9,13 +8,14 @@ export const createListing = async (req, res) => {
       category,
       title,
       description,
-      image,
       price,
       rentPerDay,
       quantity,
       quantityType,
       location,
     } = req.body;
+
+    const image = req.file ? req.file.path : "";
 
     const listing = await Listing.create({
       owner: req.user._id,
@@ -160,8 +160,7 @@ export const deleteListing = async (req, res) => {
   }
 };
 
-//Update listing
-
+// Update Listing
 export const updateListing = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
@@ -171,16 +170,29 @@ export const updateListing = async (req, res) => {
         message: "Listing not found",
       });
     }
+    console.log("Body:", req.body);
+    console.log("File:", req.file);
+    console.log("Params:", req.params.id);
 
+    // Only owner can update
     if (listing.owner.toString() !== req.user._id.toString()) {
       return res.status(401).json({
         message: "Not Authorized",
       });
     }
 
+    const updates = {
+      ...req.body,
+    };
+
+    // Update image if a new one is uploaded
+    if (req.file) {
+      updates.image = req.file.path;
+    }
+
     const updatedListing = await Listing.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updates,
       {
         new: true,
         runValidators: true,
@@ -189,6 +201,7 @@ export const updateListing = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: "Listing Updated Successfully",
       listing: updatedListing,
     });
   } catch (error) {
