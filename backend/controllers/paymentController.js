@@ -57,12 +57,12 @@ export const verifyPayment = async (req, res) => {
       .digest("hex");
 
     // Verify Signature
-    // if (expectedSignature !== razorpay_signature) {
-    //   return res.status(400).json({
-    //     success: false,
-    //     message: "Invalid Payment Signature",
-    //   });
-    // }
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Payment Signature",
+      });
+    }
     console.log("Reached after signature check");
 
     // Get User Cart
