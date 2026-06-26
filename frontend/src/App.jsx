@@ -15,6 +15,7 @@ import MyListings from "./pages/MyListings";
 import AddListing from "./pages/AddListing";
 import EditListing from "./pages/EditListing";
 import SellerOrders from "./pages/SellerOrders";
+import BuyerOrders from "./pages/BuyerOrders";
 
 function App() {
   return (
@@ -94,6 +95,15 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+  path="/buyer-orders"
+  element={
+    <ProtectedRoute>
+      <BuyerOrders />
+    </ProtectedRoute>
+  }
+/>
+
       </Routes>
     </>
   );

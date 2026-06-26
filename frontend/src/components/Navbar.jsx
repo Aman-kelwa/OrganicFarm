@@ -52,6 +52,9 @@ const Navbar = () => {
             <Link to="/cart" className="hover:text-yellow-300">
               Cart
             </Link>
+            <Link to="/buyer-orders" className="hover:text-yellow-300">
+              My Orders
+            </Link>
 
             <Link to="/notifications" className="hover:text-yellow-300">
               🔔

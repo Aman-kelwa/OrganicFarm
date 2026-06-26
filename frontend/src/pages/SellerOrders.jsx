@@ -24,7 +24,36 @@ const SellerOrders = () => {
       setLoading(false);
     }
   };
+  const updateStatus = async (id, status) => {
+    try {
+      const token = localStorage.getItem("token");
 
+      await api.put(
+        `/orders/${id}/status`,
+        {
+          orderStatus: status,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      // Update UI immediately without another API call
+      setOrders((prevOrders) =>
+        prevOrders.map((order) =>
+          order._id === id ? { ...order, orderStatus: status } : order,
+        ),
+      );
+
+      alert("Order Status Updated");
+    } catch (error) {
+      console.log(error);
+
+      alert(error.response?.data?.message || "Failed to update status");
+    }
+  };
   return (
     <div className="max-w-7xl mx-auto p-8">
       <h1 className="text-4xl font-bold mb-8">Seller Orders</h1>
@@ -64,13 +93,19 @@ const SellerOrders = () => {
                 </span>
               </p>
 
-              <p>
-                Status :
-                <span className="text-blue-600 font-semibold">
-                  {" "}
-                  {order.orderStatus}
-                </span>
-              </p>
+              <div className="mt-4">
+                <label className="block font-semibold mb-2">Order Status</label>
+
+                <select
+                  value={order.orderStatus}
+                  onChange={(e) => updateStatus(order._id, e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-2"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="confirmed">Confirmed</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
 
               <p className="text-gray-500 mt-3">
                 {new Date(order.createdAt).toLocaleDateString()}
