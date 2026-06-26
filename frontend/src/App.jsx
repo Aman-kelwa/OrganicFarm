@@ -14,6 +14,7 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import MyListings from "./pages/MyListings";
 import AddListing from "./pages/AddListing";
 import EditListing from "./pages/EditListing";
+import SellerOrders from "./pages/SellerOrders";
 
 function App() {
   return (
@@ -82,6 +83,14 @@ function App() {
           element={
             <ProtectedRoute role="seller">
               <EditListing />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/seller-orders"
+          element={
+            <ProtectedRoute role={"seller"}>
+              <SellerOrders />
             </ProtectedRoute>
           }
         />
