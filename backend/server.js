@@ -21,7 +21,7 @@ import aiRoutes from "./routes/aiRoutes.js";
 const app = express();
 app.use(
   cors({
-    origin: ["http://localhost:5173", "https://your-project.vercel.app"],
+    origin: ["http://localhost:5173", "https://organic-farm-beta.vercel.app"],
     credentials: true,
   }),
 );
