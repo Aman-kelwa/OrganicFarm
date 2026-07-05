@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
-
+import socket from "../socket";
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData, jwtToken) => {
     setUser(userData);
+    socket.emit("join", userData.id);
     setToken(jwtToken);
 
     localStorage.setItem("token", jwtToken);

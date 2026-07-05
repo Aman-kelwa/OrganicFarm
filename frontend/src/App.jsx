@@ -16,6 +16,10 @@ import AddListing from "./pages/AddListing";
 import EditListing from "./pages/EditListing";
 import SellerOrders from "./pages/SellerOrders";
 import BuyerOrders from "./pages/BuyerOrders";
+import Notifications from "./pages/Notifications";
+import MyRentals from "./pages/MyRentals";
+import SellerRentals from "./pages/SellerRentals";
+import AIChat from "./pages/AIChat";
 
 function App() {
   return (
@@ -32,6 +36,8 @@ function App() {
         />
 
         <Route path="/" element={<Home />} />
+
+        <Route path="/ai-chat" element={<AIChat />} />
 
         <Route path="/login" element={<Login />} />
 
@@ -87,6 +93,25 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/my-rentals"
+          element={
+            <ProtectedRoute role={"buyer"}>
+              <MyRentals />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/seller-rentals"
+          element={
+            <ProtectedRoute role={"seller"}>
+              <SellerRentals />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="/seller-orders"
           element={
@@ -96,14 +121,22 @@ function App() {
           }
         />
         <Route
-  path="/buyer-orders"
-  element={
-    <ProtectedRoute>
-      <BuyerOrders />
-    </ProtectedRoute>
-  }
-/>
+          path="/buyer-orders"
+          element={
+            <ProtectedRoute>
+              <BuyerOrders />
+            </ProtectedRoute>
+          }
+        />
 
+        <Route
+          path="/notifications"
+          element={
+            <ProtectedRoute>
+              <Notifications />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
