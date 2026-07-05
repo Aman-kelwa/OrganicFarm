@@ -14,7 +14,9 @@ import cartRoutes from "./routes/cartRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import dashboardRoutes from "./routes/dashboardRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import rentalRoutes from "./routes/rentalRoutes.js";
 import path from "path";
+import aiRoutes from "./routes/aiRoutes.js";
 
 const app = express();
 
@@ -30,9 +32,11 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
+app.use("/api/rentals", rentalRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/ai", aiRoutes);
 app.use("/uploads", express.static("uploads"));
 
 const io = new Server(httpServer, {
@@ -42,11 +46,12 @@ const io = new Server(httpServer, {
 });
 
 io.on("connection", (socket) => {
-  console.log("User Connected:", socket.id);
-
-  socket.on("disconnect", () => {
-    console.log("User Disconnected:", socket.id);
+  // Join user to their personal room
+  socket.on("join", (userId) => {
+    socket.join(userId);
   });
+
+  socket.on("disconnect", () => {});
 });
 
 app.get("/", (req, res) => {

@@ -8,6 +8,7 @@ import {
   getSellerOrders,
   updateOrderStatus,
   cancelOrder,
+  deleteSellerOrder,
 } from "../controllers/orderController.js";
 
 const router = express.Router();
@@ -26,5 +27,7 @@ router.put("/:id/status", protect, authorizeRoles("seller"), updateOrderStatus);
 router.post("/", protect, authorizeRoles("buyer"), createOrder);
 
 router.put("/:id/cancel", protect, authorizeRoles("buyer"), cancelOrder);
+
+router.delete("/:id", protect, authorizeRoles("seller"), deleteSellerOrder);
 
 export default router;

@@ -4,6 +4,7 @@ import crypto from "crypto";
 import Order from "../models/Order.js";
 import Listing from "../models/Listing.js";
 import Notification from "../models/Notification.js";
+import { io } from "../server.js";
 
 export const createPaymentOrder = async (req, res) => {
   try {
@@ -119,6 +120,36 @@ export const verifyPayment = async (req, res) => {
 
         paymentId: razorpay_payment_id,
       });
+      // Create notification for seller
+      const sellerNotification = await Notification.create({
+        user: order.seller,
+        message: `${req.user.name} placed a new order for ${listing.title}`,
+        type: "order",
+      });
+
+      console.log("Sending notification to:", order.seller.toString());
+
+      // Send realtime notification
+      io.to(order.seller.toString()).emit("new-order", {
+        _id: sellerNotification._id,
+        message: sellerNotification.message,
+        type: sellerNotification.type,
+        isRead: sellerNotification.isRead,
+        createdAt: sellerNotification.createdAt,
+
+        buyer: {
+          name: req.user.name,
+          email: req.user.email,
+        },
+
+        product: listing.title,
+        quantity: item.quantity,
+        amount: order.totalPrice,
+        paymentStatus: order.paymentStatus,
+        orderStatus: order.orderStatus,
+      });
+
+      createdOrders.push(order);
 
       createdOrders.push(order);
     }

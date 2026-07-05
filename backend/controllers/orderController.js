@@ -167,6 +167,47 @@ export const updateOrderStatus = async (req, res) => {
   }
 };
 
+//delete order after completion
+export const deleteSellerOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        message: "Order not found",
+      });
+    }
+
+    // Seller can delete only their own orders
+    if (order.seller.toString() !== req.user._id.toString()) {
+      return res.status(401).json({
+        message: "Not Authorized",
+      });
+    }
+
+    // Allow delete only after completion/cancellation
+    if (
+      order.orderStatus !== "confirmed" &&
+      order.orderStatus !== "cancelled"
+    ) {
+      return res.status(400).json({
+        message: "Only completed or cancelled orders can be deleted.",
+      });
+    }
+
+    await order.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
 //cancle order
 export const cancelOrder = async (req, res) => {
   try {
@@ -204,10 +245,6 @@ export const cancelOrder = async (req, res) => {
     }
 
     order.orderStatus = "cancelled";
-
-    console.log("Logged User:", req.user._id);
-
-    console.log("Order Buyer:", order.buyer);
 
     await order.save();
     await Notification.create({

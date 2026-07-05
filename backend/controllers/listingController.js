@@ -15,7 +15,8 @@ export const createListing = async (req, res) => {
       location,
     } = req.body;
 
-    const image = req.file ? req.file.path : "";
+    // const image = req.file ? req.file.path : "";
+    const image = req.file ? req.file.path : req.body.image || "";
 
     const listing = await Listing.create({
       owner: req.user._id,
