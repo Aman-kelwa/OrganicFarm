@@ -1,8 +1,21 @@
 /*
-  OrganicFarm – Home Page V2
-  Design: Editorial dark-hero + bento grid + horizontal scroll categories
-  Fonts (add to index.html):
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  OrganicFarm – Home (Design System v2: light & simple)
+
+  TOKENS (use these exact values on every page)
+  ─ Page background ... #FFFFFF
+  ─ Soft background ... #F6F8F4   (alternate sections, footer, stats bar)
+  ─ Soft green ........ #EAF4E6   (icon chips, quote band)
+  ─ Border ............ #E4E8E1   (strong: #D5DBD0)
+  ─ Text .............. #1F2A1C   · muted #5B6559 · subtle #7A8576
+  ─ Primary ........... #2E7D32   (hover #256628, text on it: white)
+  ─ Rating star ....... #F59E0B   (ratings only)
+  RADII: cards rounded-2xl · buttons/inputs rounded-xl · pills rounded-full
+  TYPE: Inter only. Headings bold, body regular.
+  SHADOW: shadow-sm at rest, shadow-md on hover (cards only).
+  MOTION: 200ms hover/press, 600ms scroll reveal. Disabled under reduced motion.
+
+  Font (index.html):
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 */
 
 import { useEffect, useRef, useState } from "react";
@@ -17,7 +30,6 @@ import {
   HandCoins,
   Truck,
   ChevronRight,
-  Play,
   MapPin,
   TrendingUp,
   Wheat,
@@ -47,11 +59,48 @@ const IMGS = {
     "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&auto=format&fit=crop&q=80",
 };
 
+/* ─── shared style primitives (candidates to move into shared components) ─── */
+const container = "max-w-7xl mx-auto px-5 sm:px-8";
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-white";
+
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-6 h-12 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnPrimary = `${btn} bg-[#2E7D32] text-white hover:bg-[#256628]`;
+const btnOutline = `${btn} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+
+const card = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+const sectionLabel = "text-sm font-semibold text-[#2E7D32] mb-2";
+const sectionTitle =
+  "text-3xl sm:text-4xl font-bold leading-tight tracking-tight text-[#1F2A1C]";
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  !!window.matchMedia &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ─── auth-aware destinations ─── */
+const SELLER_HOME = "/seller-dashboard"; // ← change to your seller landing route
+
+const getAuth = () => {
+  const token = localStorage.getItem("token");
+  let user = null;
+  try {
+    user = JSON.parse(localStorage.getItem("user"));
+  } catch {
+    user = null;
+  }
+  return { loggedIn: !!token, role: user?.role ?? null };
+};
+
 /* ─── animated count-up hook ─── */
 function useCountUp(target, duration = 1800, start = false) {
   const [val, setVal] = useState(0);
   useEffect(() => {
     if (!start) return;
+    if (prefersReducedMotion()) {
+      setVal(target);
+      return;
+    }
     let startTime = null;
     const step = (ts) => {
       if (!startTime) startTime = ts;
@@ -90,15 +139,15 @@ function Reveal({ children, delay = 0, className = "", from = "bottom" }) {
   const [ref, visible] = useReveal();
   const translate =
     from === "left"
-      ? "-translate-x-8"
+      ? "-translate-x-4"
       : from === "right"
-        ? "translate-x-8"
-        : "translate-y-8";
+        ? "translate-x-4"
+        : "translate-y-4";
   return (
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out ${visible ? "opacity-100 translate-x-0 translate-y-0" : `opacity-0 ${translate}`} ${className}`}
+      className={`transition-all duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-x-0 motion-reduce:translate-y-0 ${visible ? "opacity-100 translate-x-0 translate-y-0" : `opacity-0 ${translate}`} ${className}`}
     >
       {children}
     </div>
@@ -106,18 +155,16 @@ function Reveal({ children, delay = 0, className = "", from = "bottom" }) {
 }
 
 /* ─── stat with count-up ─── */
-function StatCard({ num, suffix = "", label, triggerRef }) {
+function StatCard({ num, suffix = "", label }) {
   const [ref, visible] = useReveal();
   const count = useCountUp(num, 1600, visible);
   return (
     <div ref={ref} className="text-center">
-      <p className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-black text-white">
+      <p className="text-3xl sm:text-4xl font-bold text-[#1F2A1C]">
         {count.toLocaleString()}
         {suffix}
       </p>
-      <p className="mt-1.5 text-sm text-white/50 font-['Space_Mono',monospace] tracking-wide">
-        {label}
-      </p>
+      <p className="mt-1 text-sm text-[#5B6559]">{label}</p>
     </div>
   );
 }
@@ -200,16 +247,26 @@ const CATEGORIES = [
   { label: "Rentals", icon: Tractor },
 ];
 
+/* tag badges: light tints with readable dark text */
 const TAG_COLOR = {
-  Crop: "bg-amber-400/20 text-amber-300 border-amber-400/30",
-  Dairy: "bg-sky-400/20 text-sky-300 border-sky-400/30",
-  Seeds: "bg-emerald-400/20 text-emerald-300 border-emerald-400/30",
-  Rental: "bg-slate-400/20 text-slate-300 border-slate-400/30",
+  Crop: "bg-amber-50 text-amber-800 border-amber-200",
+  Dairy: "bg-sky-50 text-sky-800 border-sky-200",
+  Seeds: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Rental: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
 /* ═══════════════════════════════════════════════════════════════════ */
 export default function Home() {
   const navigate = useNavigate();
+
+  /* where "Start Selling" / "Sell Now" go:
+     logged out → register · seller → seller home · other roles → listings */
+  const { loggedIn, role } = getAuth();
+  const sellPath = !loggedIn
+    ? "/register"
+    : role === "seller"
+      ? SELLER_HOME
+      : "/listings";
 
   const [search, setSearch] = useState("");
   const [activeCategory, setActive] = useState("All");
@@ -235,43 +292,27 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F0A] text-white font-['Inter',sans-serif] overflow-x-hidden">
+    <div className="min-h-screen bg-white text-[#1F2A1C] font-['Inter',sans-serif] overflow-x-hidden">
       {/* ══════════════════════════════════════════
-          HERO — full-bleed with left/right split
+          HERO
       ══════════════════════════════════════════ */}
-      <section className="relative min-h-screen flex items-center pt-24 pb-16">
-        {/* full-bleed background */}
-        <div className="absolute inset-0">
-          <img
-            src={IMGS.hero}
-            alt="Farm field at golden hour"
-            className="w-full h-full object-cover object-center opacity-35"
-            onError={(e) => (e.currentTarget.style.display = "none")}
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#0B0F0A] via-[#0B0F0A]/85 to-[#0B0F0A]/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0B0F0A] via-transparent to-transparent" />
-        </div>
+      <section className="bg-[#F6F8F4] pt-28 pb-16 sm:pb-20">
+        <div
+          className={`${container} grid lg:grid-cols-2 items-center gap-10 lg:gap-14`}
+        >
+          <div className="animate-[heroIn_0.6s_ease-out_both] motion-reduce:animate-none">
+            <p className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#EAF4E6] text-sm font-medium text-[#256628] mb-6">
+              <Leaf size={14} aria-hidden="true" />
+              India’s farm-direct marketplace
+            </p>
 
-        {/* noise texture overlay */}
-        <div className="absolute inset-0 opacity-[0.03] bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMSIvPjwvc3ZnPg==')]" />
-
-        <div className="relative max-w-7xl mx-auto px-5 sm:px-8 w-full">
-          <div className="max-w-3xl">
-            {/* eyebrow */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[#5C9E31]/40 bg-[#5C9E31]/10 mb-8 animate-[fadeDown_0.6s_ease-out]">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#A8E063] animate-pulse" />
-              <span className="text-[12px] font-['Space_Mono',monospace] text-[#A8E063] tracking-widest uppercase">
-                India's farm-direct marketplace
-              </span>
-            </div>
-
-            <h1 className="font-['Playfair_Display',serif] text-5xl sm:text-7xl lg:text-[5.5rem] font-black leading-[1.0] tracking-tight animate-[fadeDown_0.7s_ease-out]">
-              From the
-              <span className="block italic text-[#A8E063]">field to your</span>
-              <span className="block">table.</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-bold leading-[1.1] tracking-tight">
+              From the field
+              <br />
+              to your table.
             </h1>
 
-            <p className="mt-7 text-lg sm:text-xl text-white/55 max-w-xl leading-relaxed animate-[fadeDown_0.8s_ease-out]">
+            <p className="mt-5 text-lg text-[#5B6559] max-w-xl leading-relaxed">
               Buy and sell crops, dairy, seeds and farm equipment directly — no
               agents, no markup. Fair prices on both sides of the harvest.
             </p>
@@ -279,28 +320,27 @@ export default function Home() {
             {/* search bar */}
             <form
               onSubmit={handleSearch}
-              className="mt-10 flex flex-col sm:flex-row gap-3 max-w-xl animate-[fadeDown_0.9s_ease-out]"
+              role="search"
+              className="mt-8 flex flex-col sm:flex-row gap-3 max-w-xl"
             >
-              <div className="flex-1 flex items-center gap-3 bg-white/8 backdrop-blur rounded-2xl px-5 py-4 border border-white/10 focus-within:border-[#5C9E31]/60 focus-within:bg-white/10 transition-all">
-                <Search size={18} className="text-white/35 shrink-0" />
+              <label className="flex-1 flex items-center gap-3 h-12 bg-white rounded-xl px-4 border border-[#D5DBD0] focus-within:border-[#2E7D32] focus-within:ring-2 focus-within:ring-[#2E7D32]/20 transition-colors duration-200">
+                <span className="sr-only">Search listings</span>
+                <Search size={18} className="text-[#7A8576] shrink-0" />
                 <input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Try 'basmati rice', 'tractor rental'…"
-                  className="w-full bg-transparent outline-none text-[15px] text-white placeholder:text-white/30"
+                  className="w-full bg-transparent outline-none text-[15px] text-[#1F2A1C] placeholder:text-[#7A8576]"
                 />
-              </div>
-              <button
-                type="submit"
-                className="px-7 py-4 rounded-2xl bg-[#5C9E31] hover:bg-[#4E8A28] font-semibold transition-all active:scale-95 shadow-[0_0_30px_rgba(92,158,49,0.5)] flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                Search <ArrowRight size={17} />
+              </label>
+              <button type="submit" className={btnPrimary}>
+                Search <ArrowRight size={16} />
               </button>
             </form>
 
             {/* quick pills */}
-            <div className="mt-5 flex flex-wrap gap-2 animate-[fadeDown_1s_ease-out]">
+            <div className="mt-4 flex flex-wrap gap-2">
               {[
                 "Organic Rice",
                 "Desi Cow Milk",
@@ -309,10 +349,11 @@ export default function Home() {
               ].map((q) => (
                 <button
                   key={q}
+                  type="button"
                   onClick={() =>
                     navigate(`/listings?keyword=${encodeURIComponent(q)}`)
                   }
-                  className="px-3.5 py-1.5 text-[12px] text-white/50 border border-white/10 rounded-full hover:border-[#A8E063]/40 hover:text-[#A8E063] transition-all"
+                  className={`px-3.5 py-1.5 text-[13px] text-[#5B6559] bg-white border border-[#E4E8E1] rounded-full hover:border-[#2E7D32] hover:text-[#2E7D32] transition-colors duration-200 ${focusRing}`}
                 >
                   {q}
                 </button>
@@ -320,42 +361,37 @@ export default function Home() {
             </div>
 
             {/* hero CTAs */}
-            <div className="mt-10 flex items-center gap-5 animate-[fadeDown_1.1s_ease-out]">
-              <Link
-                to="/listings"
-                className="flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-white text-[#0B0F0A] font-bold hover:bg-[#A8E063] transition-all active:scale-95"
-              >
-                Browse Market <ArrowUpRight size={17} />
+            <div className="mt-8 flex flex-wrap items-center gap-3">
+              <Link to="/listings" className={btnPrimary}>
+                Browse Market <ArrowUpRight size={16} />
               </Link>
-              <Link
-                to="/register"
-                className="flex items-center gap-2 text-[15px] text-white/60 hover:text-white transition-colors font-medium"
-              >
-                <span className="flex items-center justify-center w-9 h-9 rounded-full border border-white/15 hover:border-white/40 transition-colors">
-                  <Play size={14} className="ml-0.5" />
-                </span>
+              <Link to={sellPath} className={btnOutline}>
                 Start Selling
               </Link>
             </div>
           </div>
 
-          {/* floating trust badge */}
-          <div className="absolute right-8 bottom-16 hidden xl:flex flex-col gap-3">
-            {[
-              { n: "12K+", l: "Verified Farmers" },
-              { n: "4.8★", l: "Avg. Seller Rating" },
-              { n: "₹0", l: "Hidden Fees" },
-            ].map(({ n, l }) => (
-              <div
-                key={l}
-                className="flex items-center gap-3 bg-white/6 backdrop-blur border border-white/8 rounded-2xl px-4 py-3"
-              >
-                <span className="font-['Playfair_Display',serif] text-xl font-bold text-[#A8E063]">
-                  {n}
-                </span>
-                <span className="text-xs text-white/50">{l}</span>
+          {/* hero image */}
+          <div className="relative animate-[heroIn_0.8s_ease-out_both] motion-reduce:animate-none">
+            <div className="h-64 sm:h-80 lg:h-[440px] rounded-2xl overflow-hidden border border-[#E4E8E1] bg-[#EAF4E6]">
+              <img
+                src={IMGS.hero}
+                alt="Farm field at golden hour"
+                className="w-full h-full object-cover"
+                onError={(e) => (e.currentTarget.style.display = "none")}
+              />
+            </div>
+            <div className="absolute left-4 bottom-4 sm:left-5 sm:bottom-5 flex items-center gap-3 bg-white rounded-xl border border-[#E4E8E1] shadow-md px-4 py-3">
+              <span className="grid place-items-center w-10 h-10 rounded-lg bg-[#EAF4E6] text-[#2E7D32]">
+                <ShieldCheck size={20} aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-sm font-semibold">Verified farmers</p>
+                <p className="text-xs text-[#5B6559]">
+                  4.8 average seller rating
+                </p>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
@@ -363,8 +399,10 @@ export default function Home() {
       {/* ══════════════════════════════════════════
           STATS BAR
       ══════════════════════════════════════════ */}
-      <div className="border-y border-white/6 bg-white/3 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-10 grid grid-cols-2 sm:grid-cols-4 gap-8">
+      <div className="border-b border-[#E4E8E1] bg-white">
+        <div
+          className={`${container} py-10 grid grid-cols-2 sm:grid-cols-4 gap-8`}
+        >
           <StatCard num={12000} suffix="+" label="Verified Farmers" />
           <StatCard num={4500} suffix="+" label="Live Listings" />
           <StatCard num={98} suffix="%" label="On-Time Orders" />
@@ -373,126 +411,63 @@ export default function Home() {
       </div>
 
       {/* ══════════════════════════════════════════
-          BENTO SHOWCASE
+          WHY ORGANICFARM
       ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-8 py-24">
+      <section className={`${container} py-16 sm:py-20`}>
         <Reveal>
-          <div className="mb-12">
-            <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-3">
-              Why OrganicFarm
-            </p>
-            <h2 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold leading-tight">
-              The field, closer
-              <br />
-              than ever before.
+          <div className="mb-10 max-w-xl">
+            <p className={sectionLabel}>Why OrganicFarm</p>
+            <h2 className={sectionTitle}>
+              The field, closer than ever before.
             </h2>
           </div>
         </Reveal>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 auto-rows-[180px] gap-4">
-          {/* large image tile */}
-          <Reveal delay={0} className="col-span-2 row-span-2">
-            <div className="relative h-full rounded-3xl overflow-hidden group cursor-pointer">
-              <img
-                src={IMGS.farmer}
-                alt="Farmer"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              <div className="absolute bottom-6 left-6 right-6">
-                <span className="text-xs font-['Space_Mono',monospace] text-[#A8E063] uppercase tracking-widest">
-                  Direct from farm
+        <div className="grid md:grid-cols-3 gap-5">
+          {[
+            {
+              icon: ShieldCheck,
+              title: "100% verified sellers",
+              body: "Every seller profile is checked, so you know who grew your food.",
+            },
+            {
+              icon: HandCoins,
+              title: "Zero hidden commissions",
+              body: "Sellers receive full payment instantly. Buyers see exactly what farmers charge.",
+            },
+            {
+              icon: Truck,
+              title: "Fresh produce, delivered local",
+              body: "Direct from the farm to your door, with fewer stops along the way.",
+            },
+          ].map(({ icon: Icon, title, body }, i) => (
+            <Reveal key={title} delay={i * 100}>
+              <div className={`h-full ${card} p-6`}>
+                <span className="grid place-items-center w-12 h-12 rounded-xl bg-[#EAF4E6] text-[#2E7D32] mb-5">
+                  <Icon size={22} aria-hidden="true" />
                 </span>
-                <h3 className="mt-2 font-['Playfair_Display',serif] text-2xl font-bold">
-                  Meet the people
-                  <br />
-                  who grow your food
-                </h3>
-                <Link
-                  to="/listings"
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-[#A8E063] hover:gap-3 transition-all"
-                >
-                  Explore listings <ArrowRight size={15} />
-                </Link>
+                <h3 className="text-lg font-semibold mb-2">{title}</h3>
+                <p className="text-sm text-[#5B6559] leading-relaxed">{body}</p>
               </div>
-            </div>
-          </Reveal>
-
-          {/* stat tile */}
-          <Reveal delay={100} className="col-span-1">
-            <div className="h-full rounded-3xl bg-[#5C9E31] flex flex-col justify-between p-6">
-              <ShieldCheck size={28} className="text-white/80" />
-              <div>
-                <p className="font-['Playfair_Display',serif] text-3xl font-bold">
-                  100%
-                </p>
-                <p className="text-[13px] text-white/70 mt-1">
-                  Verified seller profiles
-                </p>
-              </div>
-            </div>
-          </Reveal>
-
-          {/* market image */}
-          <Reveal delay={150} className="col-span-1">
-            <div className="relative h-full rounded-3xl overflow-hidden">
-              <img
-                src={IMGS.market}
-                alt="Fresh produce market"
-                className="w-full h-full object-cover"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-              <div className="absolute inset-0 bg-black/40" />
-              <div className="absolute bottom-4 left-4">
-                <p className="text-xs font-['Space_Mono',monospace] text-white/60">
-                  Fresh produce
-                </p>
-                <p className="text-sm font-semibold">Delivered local</p>
-              </div>
-            </div>
-          </Reveal>
-
-          {/* dark feature tile */}
-          <Reveal delay={200} className="col-span-2">
-            <div className="h-full rounded-3xl bg-white/5 border border-white/8 flex items-center gap-6 p-6">
-              <div className="shrink-0 grid place-items-center w-16 h-16 rounded-2xl bg-[#A8E063]/15">
-                <HandCoins size={28} className="text-[#A8E063]" />
-              </div>
-              <div>
-                <p className="font-semibold text-lg">Zero hidden commissions</p>
-                <p className="text-sm text-white/45 mt-1 leading-relaxed">
-                  Sellers receive full payment instantly. Buyers see exactly
-                  what farmers charge.
-                </p>
-              </div>
-              <Truck
-                size={22}
-                className="shrink-0 text-white/15 hidden sm:block"
-              />
-            </div>
-          </Reveal>
+            </Reveal>
+          ))}
         </div>
       </section>
 
       {/* ══════════════════════════════════════════
           FEATURED LISTINGS
       ══════════════════════════════════════════ */}
-      <section className="py-24 bg-white/[0.02]">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8">
+      <section className="py-16 sm:py-20 bg-[#F6F8F4] border-y border-[#E4E8E1]">
+        <div className={container}>
           <Reveal>
-            <div className="flex items-end justify-between mb-10">
+            <div className="flex items-end justify-between mb-8">
               <div>
-                <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-3">
-                  Fresh this week
-                </p>
-                <h2 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold">
-                  Featured listings
-                </h2>
+                <p className={sectionLabel}>Fresh this week</p>
+                <h2 className={sectionTitle}>Featured listings</h2>
               </div>
               <Link
                 to="/listings"
-                className="hidden sm:flex items-center gap-1.5 text-sm font-semibold text-white/50 hover:text-[#A8E063] transition-colors"
+                className={`hidden sm:flex items-center gap-1 text-sm font-semibold text-[#2E7D32] hover:text-[#256628] transition-colors duration-200 rounded ${focusRing}`}
               >
                 View all <ChevronRight size={16} />
               </Link>
@@ -501,18 +476,24 @@ export default function Home() {
 
           {/* category filter pills */}
           <Reveal delay={100}>
-            <div className="flex gap-2.5 mb-8 overflow-x-auto pb-2 scrollbar-hide">
+            <div
+              className="flex gap-2 mb-8 overflow-x-auto pb-2 scrollbar-hide"
+              role="group"
+              aria-label="Filter listings by category"
+            >
               {CATEGORIES.map(({ label, icon: Icon }) => (
                 <button
                   key={label}
+                  type="button"
+                  aria-pressed={activeCategory === label}
                   onClick={() => setActive(label)}
-                  className={`flex items-center gap-1.5 px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-1.5 px-4 h-10 rounded-full text-sm font-medium whitespace-nowrap transition-colors duration-200 ${focusRing} ${
                     activeCategory === label
-                      ? "bg-[#5C9E31] text-white shadow-[0_0_20px_rgba(92,158,49,0.4)]"
-                      : "bg-white/6 text-white/55 border border-white/8 hover:bg-white/10 hover:text-white"
+                      ? "bg-[#2E7D32] text-white"
+                      : "bg-white text-[#5B6559] border border-[#D5DBD0] hover:border-[#2E7D32] hover:text-[#2E7D32]"
                   }`}
                 >
-                  {Icon && <Icon size={14} />} {label}
+                  {Icon && <Icon size={14} aria-hidden="true" />} {label}
                 </button>
               ))}
             </div>
@@ -522,70 +503,67 @@ export default function Home() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map(
               (
-                {
-                  title,
-                  seller,
-                  location,
-                  price,
-                  unit,
-                  tag,
-                  rating,
-                  image,
-                  color,
-                },
+                { title, seller, location, price, unit, tag, rating, image },
                 i,
               ) => (
-                <Reveal key={title} delay={i * 80}>
-                  <div className="group relative rounded-3xl overflow-hidden bg-white/5 border border-white/8 hover:border-white/18 hover:-translate-y-1 hover:shadow-[0_20px_60px_rgba(0,0,0,0.5)] transition-all duration-300 cursor-pointer">
+                <Reveal key={title} delay={(i % 3) * 80}>
+                  <div
+                    className={`group h-full overflow-hidden ${card} hover:shadow-md transition-shadow duration-200`}
+                  >
                     {/* image */}
-                    <div className="relative h-52 overflow-hidden">
+                    <div className="relative h-48 overflow-hidden bg-[#EAF4E6]">
                       <img
                         src={image}
                         alt={title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 motion-reduce:transition-none"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
                       />
-                      <div
-                        className={`absolute inset-0 bg-gradient-to-t ${color} to-transparent`}
-                      />
-                      {/* tag badge */}
                       <span
-                        className={`absolute top-4 left-4 text-[11px] font-['Space_Mono',monospace] uppercase tracking-wider px-2.5 py-1 rounded-full border ${TAG_COLOR[tag]}`}
+                        className={`absolute top-3 left-3 text-xs font-medium px-2.5 py-1 rounded-full border ${TAG_COLOR[tag]}`}
                       >
                         {tag}
                       </span>
-                      {/* rating */}
-                      <span className="absolute top-4 right-4 flex items-center gap-1 text-xs font-bold bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
+                      <span className="absolute top-3 right-3 flex items-center gap-1 text-xs font-semibold bg-white text-[#1F2A1C] px-2.5 py-1 rounded-full shadow-sm">
                         <Star
-                          size={11}
-                          className="fill-[#F5C842] text-[#F5C842]"
-                        />{" "}
-                        {rating}
+                          size={12}
+                          className="fill-[#F59E0B] text-[#F59E0B]"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">Rated</span> {rating}
                       </span>
                     </div>
 
                     {/* info */}
                     <div className="p-5">
-                      <h3 className="font-['Playfair_Display',serif] text-lg font-bold leading-snug">
+                      <h3 className="text-lg font-semibold leading-snug">
                         {title}
                       </h3>
-                      <p className="flex items-center gap-1 text-xs text-white/40 mt-1.5">
-                        <MapPin size={11} /> {seller} · {location}
+                      <p className="flex items-center gap-1 text-[13px] text-[#5B6559] mt-1.5">
+                        <MapPin size={12} aria-hidden="true" /> {seller} ·{" "}
+                        {location}
                       </p>
                       <div className="mt-4 flex items-center justify-between">
-                        <p className="font-bold text-xl">
-                          <span className="text-[#A8E063]">{price}</span>
-                          <span className="text-sm text-white/40 font-normal">
+                        <p className="font-bold text-xl text-[#1F2A1C]">
+                          {price}
+                          <span className="text-sm text-[#5B6559] font-normal">
                             {unit}
                           </span>
                         </p>
                         <div className="flex gap-2">
-                          <button className="flex items-center justify-center w-9 h-9 rounded-xl bg-[#5C9E31]/15 hover:bg-[#5C9E31]/30 text-[#A8E063] transition-all">
+                          <button
+                            type="button"
+                            aria-label={`Add ${title} to cart`}
+                            className={`flex items-center justify-center w-10 h-10 rounded-xl bg-[#EAF4E6] hover:bg-[#DCEED6] text-[#2E7D32] transition-colors duration-200 ${focusRing}`}
+                          >
                             <ShoppingCart size={16} />
                           </button>
-                          <button className="flex items-center gap-1 px-3 py-2 rounded-xl bg-white/8 hover:bg-white/15 text-xs font-semibold transition-all">
+                          <button
+                            type="button"
+                            className={`flex items-center gap-1 px-3.5 h-10 rounded-xl border border-[#D5DBD0] hover:bg-[#F6F8F4] text-sm font-semibold transition-colors duration-200 ${focusRing}`}
+                          >
                             Details <ArrowRight size={13} />
                           </button>
                         </div>
@@ -599,11 +577,8 @@ export default function Home() {
 
           <Reveal>
             <div className="mt-10 text-center">
-              <Link
-                to="/listings"
-                className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl border border-white/15 hover:border-[#5C9E31]/60 hover:bg-[#5C9E31]/10 font-semibold transition-all text-white/70 hover:text-white"
-              >
-                View all listings <ArrowUpRight size={17} />
+              <Link to="/listings" className={btnOutline}>
+                View all listings <ArrowUpRight size={16} />
               </Link>
             </div>
           </Reveal>
@@ -613,58 +588,49 @@ export default function Home() {
       {/* ══════════════════════════════════════════
           HOW IT WORKS
       ══════════════════════════════════════════ */}
-      <section className="py-24 max-w-7xl mx-auto px-5 sm:px-8">
+      <section className={`${container} py-16 sm:py-20`}>
         <Reveal>
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-3">
-            The process
-          </p>
-          <h2 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold mb-16 max-w-lg">
-            No mandi. No agents.
-            <br />
-            Just farmers and buyers.
+          <p className={sectionLabel}>How it works</p>
+          <h2 className={`${sectionTitle} mb-10 max-w-lg`}>
+            No mandi. No agents. Just farmers and buyers.
           </h2>
         </Reveal>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid md:grid-cols-3 gap-5">
           {[
             {
-              step: "01",
+              step: "1",
               title: "Farmers list the harvest",
               body: "Sellers upload their crop, dairy or tool with real photos and set their own fair price — in under 5 minutes.",
               icon: Sprout,
-              color: "text-[#A8E063] bg-[#A8E063]/10",
             },
             {
-              step: "02",
+              step: "2",
               title: "Buyers shop direct",
               body: "Search by crop, location or season. See who grew it, where it came from, and buy directly with Razorpay.",
               icon: Search,
-              color: "text-amber-400 bg-amber-400/10",
             },
             {
-              step: "03",
+              step: "3",
               title: "Everyone earns more",
               body: "Farmers receive instant payouts. Buyers get fresher produce at lower prices. Zero middleman in between.",
               icon: TrendingUp,
-              color: "text-sky-400 bg-sky-400/10",
             },
-          ].map(({ step, title, body, icon: Icon, color }, i) => (
-            <Reveal key={step} delay={i * 120}>
-              <div className="group rounded-3xl border border-white/8 p-8 hover:border-white/18 hover:bg-white/4 transition-all duration-300 h-full">
-                <div className="flex items-center justify-between mb-8">
-                  <span
-                    className={`grid place-items-center w-12 h-12 rounded-2xl ${color}`}
-                  >
-                    <Icon size={22} />
-                  </span>
-                  <span className="font-['Space_Mono',monospace] text-4xl font-bold text-white/8 group-hover:text-white/15 transition-colors">
+          ].map(({ step, title, body, icon: Icon }, i) => (
+            <Reveal key={step} delay={i * 100}>
+              <div className={`h-full ${card} p-6`}>
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="grid place-items-center w-9 h-9 rounded-full bg-[#2E7D32] text-white text-sm font-bold">
                     {step}
                   </span>
+                  <Icon
+                    size={20}
+                    className="text-[#2E7D32]"
+                    aria-hidden="true"
+                  />
                 </div>
-                <h3 className="font-['Playfair_Display',serif] text-xl font-bold mb-3">
-                  {title}
-                </h3>
-                <p className="text-sm text-white/50 leading-relaxed">{body}</p>
+                <h3 className="text-lg font-semibold mb-2">{title}</h3>
+                <p className="text-sm text-[#5B6559] leading-relaxed">{body}</p>
               </div>
             </Reveal>
           ))}
@@ -672,54 +638,41 @@ export default function Home() {
       </section>
 
       {/* ══════════════════════════════════════════
-          IMAGE BREAK — wheat field
+          QUOTE BAND
       ══════════════════════════════════════════ */}
-      <div className="relative h-72 sm:h-96 overflow-hidden">
-        <img
-          src={IMGS.wheat}
-          alt="Wheat field"
-          className="w-full h-full object-cover object-bottom"
-          onError={(e) => (e.currentTarget.style.display = "none")}
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F0A] via-transparent to-[#0B0F0A]" />
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Reveal>
-            <p className="font-['Playfair_Display',serif] text-3xl sm:text-5xl font-bold italic text-center text-white/90 drop-shadow-2xl px-5">
-              "The harvest begins the moment
-              <br className="hidden sm:block" /> someone takes the first step."
-            </p>
-          </Reveal>
-        </div>
+      <div className="bg-[#EAF4E6] py-14 sm:py-16">
+        <Reveal>
+          <p className="text-xl sm:text-3xl font-semibold text-center text-[#1F2A1C] px-5 leading-snug max-w-3xl mx-auto">
+            “The harvest begins the moment someone takes the first step.”
+          </p>
+        </Reveal>
       </div>
 
       {/* ══════════════════════════════════════════
           CTA — dual column
       ══════════════════════════════════════════ */}
-      <section className="py-24 max-w-7xl mx-auto px-5 sm:px-8">
+      <section className={`${container} py-16 sm:py-20`}>
         <div className="grid sm:grid-cols-2 gap-5">
           {/* buyer CTA */}
           <Reveal from="left">
-            <div className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer">
-              <img
-                src={IMGS.market}
-                alt="Marketplace"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <p className="font-['Space_Mono',monospace] text-xs text-[#A8E063] tracking-widest uppercase mb-2">
-                  For Buyers
+            <div className={`h-full overflow-hidden ${card}`}>
+              <div className="h-44 bg-[#EAF4E6]">
+                <img
+                  src={IMGS.market}
+                  alt="Fresh produce market"
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              </div>
+              <div className="p-6">
+                <p className="text-sm font-semibold text-[#2E7D32] mb-1">
+                  For buyers
                 </p>
-                <h3 className="font-['Playfair_Display',serif] text-3xl font-bold mb-4">
-                  Shop fresh,
-                  <br />
-                  pay fair.
+                <h3 className="text-2xl font-bold mb-5">
+                  Shop fresh, pay fair.
                 </h3>
-                <Link
-                  to="/listings"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-black font-bold text-sm rounded-xl hover:bg-[#A8E063] transition-all active:scale-95"
-                >
+                <Link to="/listings" className={btnPrimary}>
                   Start Shopping <ArrowRight size={15} />
                 </Link>
               </div>
@@ -728,27 +681,24 @@ export default function Home() {
 
           {/* seller CTA */}
           <Reveal from="right">
-            <div className="relative rounded-3xl overflow-hidden h-80 group cursor-pointer">
-              <img
-                src={IMGS.farmer}
-                alt="Farmer selling"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                onError={(e) => (e.currentTarget.style.display = "none")}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-              <div className="absolute bottom-8 left-8 right-8">
-                <p className="font-['Space_Mono',monospace] text-xs text-[#A8E063] tracking-widest uppercase mb-2">
-                  For Farmers
+            <div className={`h-full overflow-hidden ${card}`}>
+              <div className="h-44 bg-[#EAF4E6]">
+                <img
+                  src={IMGS.farmer}
+                  alt="A farmer in a field"
+                  loading="lazy"
+                  className="w-full h-full object-cover"
+                  onError={(e) => (e.currentTarget.style.display = "none")}
+                />
+              </div>
+              <div className="p-6">
+                <p className="text-sm font-semibold text-[#2E7D32] mb-1">
+                  For farmers
                 </p>
-                <h3 className="font-['Playfair_Display',serif] text-3xl font-bold mb-4">
-                  List your harvest
-                  <br />
-                  in 5 minutes.
+                <h3 className="text-2xl font-bold mb-5">
+                  List your harvest in 5 minutes.
                 </h3>
-                <Link
-                  to="/register"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#5C9E31] font-bold text-sm rounded-xl hover:bg-[#4E8A28] transition-all active:scale-95 shadow-[0_0_20px_rgba(92,158,49,0.4)]"
-                >
+                <Link to={sellPath} className={btnPrimary}>
                   Sell Now <ArrowRight size={15} />
                 </Link>
               </div>
@@ -760,20 +710,23 @@ export default function Home() {
       {/* ══════════════════════════════════════════
           FOOTER
       ══════════════════════════════════════════ */}
-      <footer className="border-t border-white/6 pt-16 pb-8 px-5 sm:px-8">
+      <footer className="bg-[#F6F8F4] border-t border-[#E4E8E1] pt-14 pb-8 px-5 sm:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-14">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-10 mb-12">
             <div className="lg:col-span-2">
-              <Link to="/" className="flex items-center gap-2.5 group w-fit">
-                <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#5C9E31] text-white">
+              <Link
+                to="/"
+                className={`flex items-center gap-2.5 w-fit rounded-lg ${focusRing}`}
+              >
+                <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#2E7D32] text-white">
                   <Leaf size={18} strokeWidth={2.5} />
                 </span>
-                <span className="font-['Playfair_Display',serif] text-xl">
-                  Organic<span className="text-[#A8E063]">Farm</span>
+                <span className="text-xl font-bold">
+                  Organic<span className="text-[#2E7D32]">Farm</span>
                 </span>
               </Link>
-              <p className="mt-4 text-sm text-white/40 leading-relaxed max-w-xs">
-                India's farm-direct marketplace. Cutting the middleman between
+              <p className="mt-4 text-sm text-[#5B6559] leading-relaxed max-w-xs">
+                India’s farm-direct marketplace. Cutting the middleman between
                 growers and everyday buyers since day one.
               </p>
               <div className="mt-6 flex gap-3">
@@ -781,7 +734,8 @@ export default function Home() {
                   <a
                     key={s}
                     href="#"
-                    className="w-9 h-9 rounded-xl bg-white/6 border border-white/8 hover:bg-white/12 grid place-items-center text-[11px] text-white/40 hover:text-white transition-all"
+                    aria-label={s}
+                    className={`w-10 h-10 rounded-xl bg-white border border-[#E4E8E1] hover:border-[#2E7D32] grid place-items-center text-sm font-medium text-[#5B6559] hover:text-[#2E7D32] transition-colors duration-200 ${focusRing}`}
                   >
                     {s[0]}
                   </a>
@@ -807,7 +761,7 @@ export default function Home() {
               ],
             ].map(([heading, links]) => (
               <div key={heading}>
-                <h4 className="font-['Space_Mono',monospace] text-[11px] uppercase tracking-widest text-white/30 mb-4">
+                <h4 className="text-sm font-semibold text-[#1F2A1C] mb-4">
                   {heading}
                 </h4>
                 <ul className="space-y-3">
@@ -815,7 +769,7 @@ export default function Home() {
                     <li key={l}>
                       <a
                         href="#"
-                        className="text-sm text-white/55 hover:text-white transition-colors"
+                        className={`text-sm text-[#5B6559] hover:text-[#2E7D32] transition-colors duration-200 rounded ${focusRing}`}
                       >
                         {l}
                       </a>
@@ -826,11 +780,11 @@ export default function Home() {
             ))}
           </div>
 
-          <div className="pt-6 border-t border-white/6 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-white/25">
+          <div className="pt-6 border-t border-[#E4E8E1] flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-[#7A8576]">
               © {new Date().getFullYear()} OrganicFarm Technologies Pvt. Ltd.
             </p>
-            <p className="text-xs text-white/25">
+            <p className="text-xs text-[#7A8576]">
               Made with purpose — for the people who feed us.
             </p>
           </div>
@@ -838,8 +792,8 @@ export default function Home() {
       </footer>
 
       <style>{`
-        @keyframes fadeDown {
-          from { opacity:0; transform:translateY(-16px); }
+        @keyframes heroIn {
+          from { opacity:0; transform:translateY(12px); }
           to   { opacity:1; transform:translateY(0); }
         }
         .scrollbar-hide::-webkit-scrollbar { display:none; }

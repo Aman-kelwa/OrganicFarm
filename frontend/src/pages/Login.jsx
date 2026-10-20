@@ -1,3 +1,11 @@
+/*
+  OrganicFarm – Login (Design System v2: light & simple)
+  Same tokens and patterns as the other pages:
+  white #FFFFFF · soft #F6F8F4 · soft green #EAF4E6 · border #E4E8E1 (strong #D5DBD0)
+  text #1F2A1C · muted #5B6559 · subtle #7A8576 · primary #2E7D32 (hover #256628)
+  Fonts (index.html): Inter only
+*/
+
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -13,70 +21,32 @@ import {
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
-/* ── floating particle ── */
-function Particle({ style }) {
-  return (
-    <div
-      className="absolute w-1 h-1 rounded-full bg-[#5C9E31]/40 animate-[floatUp_var(--dur)_linear_infinite]"
-      style={style}
-    />
-  );
-}
+/* ─── shared style primitives ─── */
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-white";
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnPrimary = `${btn} bg-[#2E7D32] text-white hover:bg-[#256628]`;
 
-/* ── animated field background ── */
-function FieldBG() {
-  const particles = Array.from({ length: 18 }, (_, i) => ({
-    left: `${(i * 5.8 + 3) % 100}%`,
-    "--dur": `${4 + (i % 5)}s`,
-    animationDelay: `${(i * 0.4) % 4}s`,
-    bottom: "-10px",
-  }));
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* base gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#061008] via-[#040c06] to-[#020804]" />
-      {/* radial glow top-left */}
-      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-[#1a4a0d]/50 blur-[100px]" />
-      {/* radial glow bottom-right */}
-      <div className="absolute -bottom-20 -right-20 w-[400px] h-[400px] rounded-full bg-[#0d2e06]/60 blur-[80px]" />
-      {/* mid accent */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-[#5C9E31]/5 blur-[60px]" />
-      {/* dot grid */}
-      <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_1.5px_1.5px,#6abf3e_1px,transparent_0)] bg-[length:28px_28px]" />
-      {/* particles */}
-      {particles.map((s, i) => (
-        <Particle key={i} style={s} />
-      ))}
-    </div>
-  );
-}
+const HERO_IMG =
+  "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1000&auto=format&fit=crop&q=80";
 
 /* ── input field ── */
-function InputField({ icon: Icon, rightEl, ...props }) {
-  const [focused, setFocused] = useState(false);
+function InputField({ icon: Icon, rightEl, label, ...props }) {
   return (
-    <div
-      className={`relative flex items-center gap-3 rounded-2xl px-4 py-3.5 border
-      transition-all duration-300 bg-white/[0.04]
-      ${
-        focused
-          ? "border-[#5C9E31]/60 shadow-[0_0_0_3px_rgba(92,158,49,0.12)] bg-white/[0.07]"
-          : "border-white/10 hover:border-white/20"
-      }`}
+    <label
+      className="flex items-center gap-3 h-12 rounded-xl px-4 border border-[#D5DBD0] bg-white
+        transition-colors duration-200
+        focus-within:border-[#2E7D32] focus-within:ring-2 focus-within:ring-[#2E7D32]/20
+        hover:border-[#2E7D32]/50"
     >
-      <Icon
-        size={17}
-        className={`shrink-0 transition-colors ${focused ? "text-[#A8E063]" : "text-white/30"}`}
-      />
+      <span className="sr-only">{label}</span>
+      <Icon size={17} aria-hidden="true" className="shrink-0 text-[#7A8576]" />
       <input
         {...props}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        className="flex-1 bg-transparent outline-none text-[15px] text-white placeholder:text-white/25"
+        className="flex-1 min-w-0 bg-transparent outline-none text-[15px] text-[#1F2A1C] placeholder:text-[#7A8576]"
       />
       {rightEl}
-    </div>
+    </label>
   );
 }
 
@@ -118,45 +88,42 @@ export default function Login() {
 
   /* ════════ RENDER ════════ */
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 font-['Inter',sans-serif]">
+    <div className="min-h-screen grid lg:grid-cols-2 font-['Inter',sans-serif] text-[#1F2A1C]">
       {/* ══════════════════════════════════════
-          LEFT PANEL — dark green cinematic
+          LEFT PANEL — soft green welcome
       ══════════════════════════════════════ */}
-      <div className="relative hidden lg:flex flex-col justify-between px-14 py-12 pt-28 overflow-hidden">
-        <FieldBG />
+      <div className="relative hidden lg:flex flex-col justify-between gap-8 px-14 pb-12 pt-28 bg-[#EAF4E6] border-r border-[#E4E8E1]">
+        <div>
+          <span className="grid place-items-center w-12 h-12 rounded-xl bg-white text-[#2E7D32] border border-[#E4E8E1] mb-6">
+            <Wheat size={22} aria-hidden="true" />
+          </span>
 
-        {/* center text */}
-        <div className="relative">
-          {/* large decorative wheat */}
-          <Wheat
-            size={120}
-            strokeWidth={0.5}
-            className="text-[#5C9E31]/10 mb-6 -ml-2"
-          />
-
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-4">
+          <p className="text-sm font-semibold text-[#2E7D32] mb-3">
             Welcome back
           </p>
-          <h1 className="font-['Playfair_Display',serif] text-5xl font-black leading-[1.05] text-white mb-6">
-            Good to see
+          <h1 className="text-4xl xl:text-5xl font-bold leading-[1.1] tracking-tight mb-5">
+            Good to see you
             <br />
-            you in the
-            <br />
-            <span className="italic text-[#A8E063]">field again.</span>
+            in the field again.
           </h1>
-          <p className="text-white/40 max-w-sm leading-relaxed text-[15px]">
+          <p className="text-[#5B6559] max-w-sm leading-relaxed text-[15px]">
             Track your orders, manage listings and keep the harvest moving —
             straight from grower to buyer.
           </p>
+        </div>
 
-          {/* divider */}
-          <div className="mt-10 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-[#5C9E31]/40 to-transparent" />
-          </div>
+        {/* farm photo */}
+        <div className="h-56 xl:h-64 rounded-2xl overflow-hidden border border-[#D5DBD0] bg-white/60">
+          <img
+            src={HERO_IMG}
+            alt="Farm field at golden hour"
+            className="w-full h-full object-cover"
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
         </div>
 
         {/* bottom stats */}
-        <div className="relative grid grid-cols-3 gap-0 rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
+        <div className="grid grid-cols-3 rounded-2xl bg-white border border-[#E4E8E1] shadow-sm overflow-hidden">
           {[
             { n: "12K+", l: "Verified Farmers" },
             { n: "4,500+", l: "Live Listings" },
@@ -164,14 +131,10 @@ export default function Login() {
           ].map(({ n, l }, i) => (
             <div
               key={l}
-              className={`px-5 py-4 text-center ${i < 2 ? "border-r border-white/6" : ""}`}
+              className={`px-5 py-4 text-center ${i < 2 ? "border-r border-[#E4E8E1]" : ""}`}
             >
-              <p className="font-['Playfair_Display',serif] text-2xl font-bold text-[#A8E063]">
-                {n}
-              </p>
-              <p className="text-[11px] text-white/35 mt-1 font-['Space_Mono',monospace]">
-                {l}
-              </p>
+              <p className="text-2xl font-bold text-[#1F2A1C]">{n}</p>
+              <p className="text-xs text-[#5B6559] mt-1">{l}</p>
             </div>
           ))}
         </div>
@@ -180,27 +143,18 @@ export default function Login() {
       {/* ══════════════════════════════════════
           RIGHT PANEL — form
       ══════════════════════════════════════ */}
-      <div
-        className="relative flex items-center justify-center px-5 sm:px-10 py-12 pt-28
-        bg-[#060A06] overflow-hidden"
-      >
-        {/* subtle right-panel glow */}
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#5C9E31]/6 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0  w-60 h-60 rounded-full bg-[#5C9E31]/4 blur-[60px] pointer-events-none" />
-
-        <div className="relative w-full max-w-md animate-[riseIn_0.6s_ease-out]">
+      <div className="flex items-center justify-center px-5 sm:px-10 py-12 pt-28 bg-white">
+        <div className="w-full max-w-md animate-[riseIn_0.5s_ease-out] motion-reduce:animate-none">
           {/* heading */}
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-3">
-            Login
-          </p>
-          <h2 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-black text-white leading-tight mb-2">
+          <p className="text-sm font-semibold text-[#2E7D32] mb-2">Login</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-2">
             Welcome back
           </h2>
-          <p className="text-white/40 text-sm mb-8">
+          <p className="text-[#5B6559] text-sm mb-8">
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="text-[#A8E063] font-semibold hover:text-white transition-colors"
+              className={`text-[#2E7D32] font-semibold hover:text-[#256628] transition-colors duration-200 rounded ${focusRing}`}
             >
               Create one free
             </Link>
@@ -209,10 +163,11 @@ export default function Login() {
           {/* success banner */}
           {successMessage && (
             <div
-              className="flex items-center gap-2.5 text-sm text-[#A8E063] bg-[#5C9E31]/10
-              border border-[#5C9E31]/25 rounded-xl px-4 py-3 mb-5 animate-[riseIn_0.4s_ease-out]"
+              role="status"
+              className="flex items-center gap-2.5 text-sm font-medium text-[#256628] bg-[#EAF4E6]
+              border border-[#2E7D32]/25 rounded-xl px-4 py-3 mb-5 animate-[riseIn_0.4s_ease-out] motion-reduce:animate-none"
             >
-              <CheckCircle2 size={15} className="shrink-0" />
+              <CheckCircle2 size={16} className="shrink-0" aria-hidden="true" />
               {successMessage}
             </div>
           )}
@@ -220,8 +175,9 @@ export default function Login() {
           {/* error banner */}
           {error && (
             <div
-              className="text-sm text-red-400 bg-red-500/8 border border-red-500/20
-              rounded-xl px-4 py-3 mb-5 animate-[shake_0.4s_ease-in-out]"
+              role="alert"
+              className="text-sm font-medium text-red-700 bg-red-50 border border-red-200
+              rounded-xl px-4 py-3 mb-5 animate-[shake_0.4s_ease-in-out] motion-reduce:animate-none"
             >
               {error}
             </div>
@@ -231,8 +187,10 @@ export default function Login() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <InputField
               icon={Mail}
+              label="Email address"
               type="email"
               name="email"
+              autoComplete="email"
               placeholder="Email address"
               value={formData.email}
               onChange={handleChange}
@@ -241,8 +199,10 @@ export default function Login() {
 
             <InputField
               icon={Lock}
+              label="Password"
               type={showPassword ? "text" : "password"}
               name="password"
+              autoComplete="current-password"
               placeholder="Password"
               value={formData.password}
               onChange={handleChange}
@@ -251,17 +211,19 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="shrink-0 text-white/25 hover:text-white/60 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className={`shrink-0 text-[#7A8576] hover:text-[#1F2A1C] transition-colors duration-200 rounded ${focusRing}`}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               }
             />
 
             <div className="flex justify-end">
               <Link
-                to="/forgot-password"
-                className="text-xs text-white/35 hover:text-[#A8E063] transition-colors font-medium"
+                to="/register"
+                className={`text-[13px] text-[#5B6559] hover:text-[#2E7D32] transition-colors duration-200 font-medium rounded ${focusRing}`}
               >
                 Forgot password?
               </Link>
@@ -270,21 +232,22 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="group w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl
-                bg-[#5C9E31] hover:bg-[#4e8a28] text-white font-bold text-[15px]
-                transition-all active:scale-[0.98] disabled:opacity-50
-                shadow-[0_0_28px_rgba(92,158,49,0.4)] hover:shadow-[0_0_40px_rgba(92,158,49,0.6)]"
+              className={`${btnPrimary} group w-full disabled:opacity-60`}
             >
               {loading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" /> Logging in…
+                  <Loader2
+                    size={18}
+                    className="animate-spin motion-reduce:animate-none"
+                  />{" "}
+                  Logging in…
                 </>
               ) : (
                 <>
                   Log in
                   <ArrowRight
                     size={17}
-                    className="group-hover:translate-x-1 transition-transform duration-200"
+                    className="group-hover:translate-x-1 transition-transform duration-200 motion-reduce:transition-none"
                   />
                 </>
               )}
@@ -292,35 +255,21 @@ export default function Login() {
           </form>
 
           {/* footer */}
-          <p className="text-center text-xs text-white/20 mt-8 leading-relaxed">
-            By logging in you agree to OrganicFarm's{" "}
-            <span className="text-white/35 hover:text-white/60 cursor-pointer transition-colors">
-              Terms
-            </span>
-            {" & "}
-            <span className="text-white/35 hover:text-white/60 cursor-pointer transition-colors">
-              Privacy Policy
-            </span>
-            .
+          <p className="text-center text-xs text-[#5B6559] mt-8 leading-relaxed">
+            By logging in you agree to OrganicFarm's Terms &amp; Privacy Policy.
           </p>
         </div>
       </div>
 
       <style>{`
         @keyframes riseIn {
-          from { opacity:0; transform:translateY(16px); }
+          from { opacity:0; transform:translateY(12px); }
           to   { opacity:1; transform:translateY(0); }
         }
         @keyframes shake {
           0%,100% { transform:translateX(0); }
           25%      { transform:translateX(-5px); }
           75%      { transform:translateX(5px); }
-        }
-        @keyframes floatUp {
-          0%   { transform:translateY(0)    scale(1);   opacity:0; }
-          10%  { opacity:0.6; }
-          90%  { opacity:0.2; }
-          100% { transform:translateY(-100vh) scale(0.5); opacity:0; }
         }
       `}</style>
     </div>
