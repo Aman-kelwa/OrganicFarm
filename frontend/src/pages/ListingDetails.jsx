@@ -1,12 +1,76 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  Star,
+  Leaf,
+  Package,
+  MapPin,
+  User,
+  Tractor,
+  ShoppingBag,
+  IndianRupee,
+} from "lucide-react";
 import api from "../services/api";
+
+/* ════════════════════════════════════════════════════
+   SHARED STYLE CONSTANTS
+   (same names as the other pages — move them into one
+   shared file, e.g. src/styles/ui.js, and import them)
+   ════════════════════════════════════════════════════ */
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2";
+const CONTAINER = "max-w-7xl mx-auto px-5 sm:px-8";
+const CARD = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+const BTN = `inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${FOCUS}`;
+const BTN_PRIMARY = `${BTN} bg-[#2E7D32] text-white hover:bg-[#256628] disabled:cursor-not-allowed disabled:bg-[#E4E8E1] disabled:text-[#7A8576]`;
+const INPUT = `w-full h-12 rounded-xl border border-[#D5DBD0] bg-white px-4 text-sm text-[#1F2A1C] placeholder:text-[#7A8576] transition-colors duration-200 ${FOCUS}`;
+const TAG_BASE =
+  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold";
+
+/* ── reveal: 600ms fade + 16px slide, once (`hero` = gentler 12px) ── */
+function useReveal() {
+  const ref = useRef(null);
+  const [v, setV] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          setV(true);
+          obs.unobserve(el);
+        }
+      },
+      { threshold: 0.07 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, v];
+}
+function Reveal({ children, className = "", hero = false }) {
+  const [ref, v] = useReveal();
+  return (
+    <div
+      ref={ref}
+      className={`transition-[opacity,transform] duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:transform-none ${
+        v
+          ? "opacity-100 translate-y-0"
+          : `opacity-0 motion-reduce:opacity-100 ${hero ? "translate-y-3" : "translate-y-4"}`
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+}
 
 /* ---------------------------------------------------------
    Small UI-only helper hook: animates a displayed number
    toward a target value. Purely cosmetic — the real value
    (totalRent) is still the single source of truth used for
    the actual payment call in rentNow().
+   Skipped when the user prefers reduced motion.
 --------------------------------------------------------- */
 const useCountUp = (target) => {
   const [display, setDisplay] = useState(target);
@@ -16,6 +80,13 @@ const useCountUp = (target) => {
   useEffect(() => {
     const from = fromRef.current;
     const to = target;
+
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setDisplay(to);
+      fromRef.current = to;
+      return;
+    }
+
     const duration = 450;
     const start = performance.now();
 
@@ -57,7 +128,6 @@ const ListingDetails = () => {
   const [comment, setComment] = useState("");
 
   // UI-only states (no effect on API logic)
-  const [mounted, setMounted] = useState(false);
   const [hoverStar, setHoverStar] = useState(0);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -66,11 +136,6 @@ const ListingDetails = () => {
 
   useEffect(() => {
     fetchListing();
-  }, []);
-
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 40);
-    return () => clearTimeout(t);
   }, []);
 
   // Calculate Rent Automatically
@@ -222,7 +287,7 @@ const ListingDetails = () => {
         },
 
         theme: {
-          color: "#34d399",
+          color: "#2E7D32",
         },
       };
 
@@ -236,19 +301,27 @@ const ListingDetails = () => {
     }
   };
 
+  const today = new Date().toISOString().split("T")[0];
+
   /* ------------------------- Loading skeleton ------------------------- */
   if (!listing) {
     return (
-      <div className="ld-root min-h-screen">
-        <style>{THEME_CSS}</style>
-        <div className="max-w-6xl mx-auto p-8 ld-page-offset">
-          <div className="grid md:grid-cols-2 gap-10">
-            <div className="ld-skeleton h-[450px] rounded-2xl" />
+      <div className="min-h-screen bg-[#F6F8F4] font-['Inter',sans-serif]">
+        <div aria-busy="true" className={`${CONTAINER} pt-28 pb-16 sm:pb-20`}>
+          <span className="sr-only">Loading listing</span>
+          <div className="grid lg:grid-cols-2 gap-10 animate-pulse motion-reduce:animate-none">
+            <div className="aspect-[4/3] rounded-2xl bg-[#E4E8E1]" />
             <div className="space-y-4 pt-2">
-              <div className="ld-skeleton h-10 w-3/4 rounded-lg" />
-              <div className="ld-skeleton h-5 w-1/3 rounded-lg" />
-              <div className="ld-skeleton h-24 w-full rounded-lg" />
-              <div className="ld-skeleton h-12 w-1/2 rounded-lg" />
+              <div className="h-4 w-24 rounded-full bg-[#E4E8E1]" />
+              <div className="h-10 w-3/4 rounded-xl bg-[#E4E8E1]" />
+              <div className="h-5 w-1/3 rounded-full bg-[#E4E8E1]" />
+              <div className="h-24 w-full rounded-xl bg-[#E4E8E1]" />
+              <div className="h-12 w-1/2 rounded-xl bg-[#E4E8E1]" />
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {[0, 1, 2, 3].map((i) => (
+                  <div key={i} className="h-16 rounded-xl bg-[#E4E8E1]" />
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -256,443 +329,376 @@ const ListingDetails = () => {
     );
   }
 
+  const reviews = listing.reviews ?? [];
+
   return (
-    <div className="ld-root min-h-screen">
-      <style>{THEME_CSS}</style>
-
-      <div className="max-w-6xl mx-auto p-8 ld-page-offset">
-        <div className="grid md:grid-cols-2 gap-10">
-          {/* Left — Image */}
-          <div className={`ld-reveal ${mounted ? "ld-reveal-in" : ""}`}>
-            <div className="ld-image-frame group">
-              {!imgLoaded && (
-                <div className="ld-skeleton absolute inset-0 rounded-2xl" />
-              )}
-              <img
-                src={listing.image}
-                alt={listing.title}
-                onLoad={() => setImgLoaded(true)}
-                className={`w-full h-[450px] object-cover rounded-2xl transition-all duration-700 ease-out group-hover:scale-[1.04] ${
-                  imgLoaded ? "opacity-100" : "opacity-0"
-                }`}
+    <div className="min-h-screen bg-white text-[#1F2A1C] font-['Inter',sans-serif]">
+      {/* ── PRODUCT ── */}
+      <section className="bg-[#F6F8F4] border-b border-[#E4E8E1] pt-28 pb-16 sm:pb-20">
+        <div className={CONTAINER}>
+          <Reveal hero>
+            <button
+              type="button"
+              onClick={() => navigate("/listings")}
+              className={`group mb-6 inline-flex items-center gap-2 rounded text-sm font-semibold text-[#2E7D32] hover:text-[#256628] transition-colors duration-200 ${FOCUS}`}
+            >
+              <ArrowLeft
+                size={15}
+                aria-hidden="true"
+                className="transition-transform duration-200 group-hover:-translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
               />
-              <div className="ld-image-glow" />
-              <span
-                className={`ld-badge ${listing.type === "sale" ? "ld-badge-gold" : "ld-badge-mint"}`}
-              >
-                {listing.type === "sale" ? "For Sale" : "For Rent"}
-              </span>
-            </div>
-          </div>
+              Back to listings
+            </button>
+          </Reveal>
 
-          {/* Right — Details */}
-          <div
-            className={`ld-reveal ld-reveal-delay-1 ${mounted ? "ld-reveal-in" : ""}`}
-          >
-            <h1 className="ld-title text-4xl">{listing.title}</h1>
-
-            <div className="flex items-center gap-3 mt-3">
-              <span className="ld-rating-pill">
-                ⭐ {listing.averageRating?.toFixed(1)}
-              </span>
-              <span className="ld-muted text-sm">
-                ({listing.numReviews} reviews)
-              </span>
-            </div>
-
-            <p className="ld-muted mt-4 leading-relaxed">
-              {listing.description}
-            </p>
-
-            <p className="ld-price mt-5">
-              {listing.type === "sale"
-                ? `₹${listing.price}`
-                : `₹${listing.rentPerDay}`}
-              {listing.type !== "sale" && (
-                <span className="ld-price-suffix"> /day</span>
-              )}
-            </p>
-
-            <div className="grid grid-cols-2 gap-3 mt-6">
-              <InfoChip label="Category" value={listing.category} icon="🌾" />
-              <InfoChip
-                label="Stock"
-                value={`${listing.quantity} ${listing.quantityType}`}
-                icon="📦"
-              />
-              <InfoChip label="Location" value={listing.location} icon="📍" />
-              <InfoChip label="Owner" value={listing.owner?.name} icon="👤" />
-            </div>
-
-            {/* RENT SECTION */}
-            {listing.type === "rent" && (
-              <div className="ld-panel mt-8">
-                <h2 className="ld-panel-title">Rent this Machine</h2>
-
-                <div className="mb-4">
-                  <label className="ld-label">Start Date</label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    min={new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="ld-input mt-2"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="ld-label">End Date</label>
-                  <input
-                    type="date"
-                    value={endDate}
-                    min={startDate || new Date().toISOString().split("T")[0]}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    className="ld-input mt-2"
-                  />
-                </div>
-
-                <div
-                  className={`ld-summary mt-5 ${
-                    totalDays > 0 ? "ld-summary-active" : ""
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-12 items-start">
+            {/* Left — Image */}
+            <Reveal hero>
+              <div className="group relative aspect-[4/3] overflow-hidden rounded-2xl border border-[#E4E8E1] bg-white shadow-sm">
+                {!imgLoaded && (
+                  <div className="absolute inset-0 bg-[#E4E8E1] animate-pulse motion-reduce:animate-none" />
+                )}
+                <img
+                  src={listing.image}
+                  alt={listing.title}
+                  onLoad={() => setImgLoaded(true)}
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                    setImgLoaded(true);
+                  }}
+                  className={`h-full w-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${
+                    imgLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+                <span
+                  className={`absolute left-4 top-4 ${TAG_BASE} ${
+                    listing.type === "sale"
+                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                      : "bg-sky-50 text-sky-800 border-sky-200"
                   }`}
                 >
-                  <p className="flex justify-between">
-                    <span className="ld-muted">Rent Per Day</span>
-                    <strong className="ld-summary-text">
-                      ₹{listing.rentPerDay}
-                    </strong>
-                  </p>
-                  <p className="flex justify-between mt-2">
-                    <span className="ld-muted">Total Days</span>
-                    <strong className="ld-summary-text">{totalDays}</strong>
-                  </p>
-                  <div className="ld-divider my-3" />
-                  <p className="flex justify-between items-center">
-                    <span className="ld-muted">Total Rent</span>
-                    <strong className="ld-total">₹{animatedRent}</strong>
-                  </p>
+                  {listing.type === "sale" ? "For Sale" : "For Rent"}
+                </span>
+              </div>
+            </Reveal>
+
+            {/* Right — Details */}
+            <Reveal hero>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                  {listing.title}
+                </h1>
+
+                <div className="mt-3 flex items-center gap-2">
+                  <Star
+                    size={18}
+                    aria-hidden="true"
+                    className="fill-[#F59E0B] text-[#F59E0B]"
+                  />
+                  <span className="text-sm font-semibold">
+                    {listing.averageRating?.toFixed(1)}
+                  </span>
+                  <span className="text-sm text-[#5B6559]">
+                    ({listing.numReviews} reviews)
+                  </span>
                 </div>
 
-                <button
-                  onClick={rentNow}
-                  disabled={!startDate || !endDate}
-                  className="ld-btn-primary w-full mt-6"
-                >
-                  <span>Rent Now</span>
-                </button>
-              </div>
-            )}
-
-            {/* SALE SECTION */}
-            {listing.type === "sale" && (
-              <div className="ld-panel ld-panel-gold mt-8">
-                <h2 className="ld-panel-title">
-                  Product Available for Purchase
-                </h2>
-                <p className="ld-muted mt-2">
-                  Click &ldquo;Add To Cart&rdquo; from the listings page to
-                  purchase this product.
+                <p className="mt-4 text-base leading-relaxed text-[#5B6559]">
+                  {listing.description}
                 </p>
+
+                <p className="mt-5 text-3xl font-bold">
+                  {listing.type === "sale"
+                    ? `₹${listing.price}`
+                    : `₹${listing.rentPerDay}`}
+                  {listing.type !== "sale" && (
+                    <span className="text-base font-normal text-[#5B6559]">
+                      {" "}
+                      /day
+                    </span>
+                  )}
+                </p>
+
+                <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <InfoChip
+                    label="Category"
+                    value={listing.category}
+                    icon={Leaf}
+                  />
+                  <InfoChip
+                    label="Stock"
+                    value={`${listing.quantity} ${listing.quantityType}`}
+                    icon={Package}
+                  />
+                  <InfoChip
+                    label="Location"
+                    value={listing.location}
+                    icon={MapPin}
+                  />
+                  <InfoChip
+                    label="Owner"
+                    value={listing.owner?.name}
+                    icon={User}
+                  />
+                </div>
+
+                {/* RENT SECTION */}
+                {listing.type === "rent" && (
+                  <div className={`${CARD} mt-8 p-6`}>
+                    <h2 className="mb-5 flex items-center gap-2 text-xl font-semibold">
+                      <Tractor
+                        size={20}
+                        aria-hidden="true"
+                        className="text-[#2E7D32]"
+                      />
+                      Rent this machine
+                    </h2>
+
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div>
+                        <label
+                          htmlFor="rent-start"
+                          className="mb-2 block text-sm font-semibold"
+                        >
+                          Start date
+                        </label>
+                        <input
+                          id="rent-start"
+                          type="date"
+                          value={startDate}
+                          min={today}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className={INPUT}
+                        />
+                      </div>
+
+                      <div>
+                        <label
+                          htmlFor="rent-end"
+                          className="mb-2 block text-sm font-semibold"
+                        >
+                          End date
+                        </label>
+                        <input
+                          id="rent-end"
+                          type="date"
+                          value={endDate}
+                          min={startDate || today}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          className={INPUT}
+                        />
+                      </div>
+                    </div>
+
+                    <div
+                      aria-live="polite"
+                      className="mt-5 rounded-xl border border-[#E4E8E1] bg-[#F6F8F4] p-4 text-sm"
+                    >
+                      <p className="flex justify-between">
+                        <span className="text-[#5B6559]">Rent per day</span>
+                        <strong>₹{listing.rentPerDay}</strong>
+                      </p>
+                      <p className="mt-2 flex justify-between">
+                        <span className="text-[#5B6559]">Total days</span>
+                        <strong>{totalDays}</strong>
+                      </p>
+                      <div className="mt-4 flex items-center justify-between rounded-xl bg-[#EAF4E6] px-4 py-3">
+                        <span className="font-semibold">Total rent</span>
+                        <strong className="text-2xl font-bold">
+                          ₹{animatedRent.toLocaleString("en-IN")}
+                        </strong>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={rentNow}
+                      disabled={!startDate || !endDate}
+                      className={`${BTN_PRIMARY} mt-5 w-full`}
+                    >
+                      <IndianRupee size={16} aria-hidden="true" />
+                      Rent now
+                    </button>
+                  </div>
+                )}
+
+                {/* SALE SECTION */}
+                {listing.type === "sale" && (
+                  <div className={`${CARD} mt-8 flex items-start gap-4 p-6`}>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EAF4E6] text-[#2E7D32]">
+                      <ShoppingBag size={20} aria-hidden="true" />
+                    </span>
+                    <div>
+                      <h2 className="text-lg font-semibold">
+                        Product available for purchase
+                      </h2>
+                      <p className="mt-1 text-sm text-[#5B6559]">
+                        Click &ldquo;Add To Cart&rdquo; from the listings page
+                        to purchase this product.
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
-            )}
+            </Reveal>
           </div>
         </div>
+      </section>
 
-        {/* Review form */}
-        <div
-          className={`ld-panel ld-reveal ld-reveal-delay-2 mt-12 ${
-            mounted ? "ld-reveal-in" : ""
-          }`}
-        >
-          <h2 className="ld-panel-title">Write a Review</h2>
+      {/* ── REVIEWS ── */}
+      <section className="py-16 sm:py-20">
+        <div className={CONTAINER}>
+          <div className="grid lg:grid-cols-3 gap-8 lg:gap-10 items-start">
+            {/* Review form */}
+            <Reveal className="lg:sticky lg:top-24">
+              <div className={`${CARD} p-6`}>
+                <h2 className="mb-5 text-xl font-semibold">Write a review</h2>
 
-          <div className="mb-5">
-            <label className="ld-label">Rating</label>
-            <div
-              className="flex gap-1 mt-2"
-              onMouseLeave={() => setHoverStar(0)}
-            >
-              {[1, 2, 3, 4, 5].map((n) => (
+                <div className="mb-5">
+                  <p id="rating-label" className="mb-1 text-sm font-semibold">
+                    Rating
+                  </p>
+                  <div
+                    role="radiogroup"
+                    aria-labelledby="rating-label"
+                    className="flex gap-1"
+                    onMouseLeave={() => setHoverStar(0)}
+                  >
+                    {[1, 2, 3, 4, 5].map((n) => {
+                      const filled = n <= (hoverStar || rating);
+                      return (
+                        <button
+                          type="button"
+                          key={n}
+                          role="radio"
+                          aria-checked={rating === n}
+                          onMouseEnter={() => setHoverStar(n)}
+                          onClick={() => setRating(n)}
+                          className={`grid h-10 w-10 place-items-center rounded-lg transition-transform duration-200 hover:scale-110 motion-reduce:hover:scale-100 ${FOCUS}`}
+                          aria-label={`Rate ${n} star${n > 1 ? "s" : ""}`}
+                        >
+                          <Star
+                            size={26}
+                            aria-hidden="true"
+                            className={
+                              filled
+                                ? "fill-[#F59E0B] text-[#F59E0B]"
+                                : "text-[#D5DBD0]"
+                            }
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <label
+                  htmlFor="review-comment"
+                  className="mb-2 block text-sm font-semibold"
+                >
+                  Your review
+                </label>
+                <textarea
+                  id="review-comment"
+                  rows={4}
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Write your experience..."
+                  className={`${INPUT} h-auto resize-y py-3`}
+                />
+
                 <button
                   type="button"
-                  key={n}
-                  onMouseEnter={() => setHoverStar(n)}
-                  onClick={() => setRating(n)}
-                  className="ld-star-btn"
-                  aria-label={`Rate ${n} star`}
+                  onClick={submitReview}
+                  disabled={submitting}
+                  className={`${BTN_PRIMARY} mt-5 w-full`}
                 >
-                  <span
-                    className={
-                      n <= (hoverStar || rating)
-                        ? "ld-star-filled"
-                        : "ld-star-empty"
-                    }
-                  >
-                    ★
-                  </span>
+                  {submitting ? "Submitting…" : "Submit review"}
                 </button>
-              ))}
+              </div>
+            </Reveal>
+
+            {/* Reviews list */}
+            <div className="lg:col-span-2">
+              <h2 className="mb-6 text-2xl sm:text-3xl font-bold tracking-tight">
+                Customer reviews
+              </h2>
+
+              {reviews.length === 0 ? (
+                <div
+                  className={`${CARD} flex flex-col items-center px-6 py-14 text-center`}
+                >
+                  <span className="mb-4 grid h-14 w-14 place-items-center rounded-2xl bg-[#EAF4E6] text-[#2E7D32]">
+                    <Star size={24} aria-hidden="true" />
+                  </span>
+                  <p className="max-w-xs text-sm leading-relaxed text-[#5B6559]">
+                    No reviews yet — be the first to share yours.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reviews.map((review) => (
+                    <Reveal key={review._id}>
+                      <article
+                        className={`${CARD} p-5 transition-shadow duration-200 hover:shadow-md`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            aria-hidden="true"
+                            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#EAF4E6] font-semibold text-[#2E7D32]"
+                          >
+                            {review.name?.[0]?.toUpperCase() || "U"}
+                          </div>
+                          <div className="min-w-0">
+                            <h3 className="truncate font-semibold">
+                              {review.name}
+                            </h3>
+                            <div
+                              role="img"
+                              aria-label={`${review.rating} out of 5 stars`}
+                              className="mt-0.5 flex gap-0.5"
+                            >
+                              {[1, 2, 3, 4, 5].map((n) => (
+                                <Star
+                                  key={n}
+                                  size={14}
+                                  aria-hidden="true"
+                                  className={
+                                    n <= review.rating
+                                      ? "fill-[#F59E0B] text-[#F59E0B]"
+                                      : "text-[#D5DBD0]"
+                                  }
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-sm leading-relaxed text-[#5B6559]">
+                          {review.comment}
+                        </p>
+                      </article>
+                    </Reveal>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-
-          <textarea
-            rows={4}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Write your experience..."
-            className="ld-input ld-textarea"
-          />
-
-          <button
-            onClick={submitReview}
-            disabled={submitting}
-            className="ld-btn-primary mt-5 px-8 w-auto"
-          >
-            {submitting ? "Submitting…" : "Submit Review"}
-          </button>
         </div>
-
-        {/* Reviews list */}
-        <div className="mt-12">
-          <h2 className="ld-title text-3xl mb-6">Customer Reviews</h2>
-
-          {listing.reviews.length === 0 ? (
-            <p className="ld-muted">
-              No reviews yet — be the first to share yours.
-            </p>
-          ) : (
-            listing.reviews.map((review, i) => (
-              <div
-                key={review._id}
-                className={`ld-review-card ld-reveal ${mounted ? "ld-reveal-in" : ""}`}
-                style={{ transitionDelay: `${Math.min(i, 6) * 70 + 200}ms` }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="ld-avatar">
-                    {review.name?.[0]?.toUpperCase() || "U"}
-                  </div>
-                  <div>
-                    <h3 className="ld-review-name">{review.name}</h3>
-                    <p className="ld-star-line">
-                      {"★".repeat(review.rating)}
-                      <span className="ld-star-empty-line">
-                        {"★".repeat(5 - review.rating)}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-                <p className="ld-muted mt-3 leading-relaxed">
-                  {review.comment}
-                </p>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
+      </section>
     </div>
   );
 };
 
-const InfoChip = ({ label, value, icon }) => (
-  <div className="ld-chip">
-    <span className="ld-chip-icon">{icon}</span>
-    <div>
-      <p className="ld-chip-label">{label}</p>
-      <p className="ld-chip-value">{value}</p>
+const InfoChip = ({ label, value, icon: Icon }) => (
+  <div className="flex items-center gap-3 rounded-xl border border-[#E4E8E1] bg-white px-4 py-3">
+    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#EAF4E6] text-[#2E7D32]">
+      <Icon size={18} aria-hidden="true" />
+    </span>
+    <div className="min-w-0">
+      <p className="text-xs text-[#7A8576]">{label}</p>
+      <p className="truncate text-sm font-semibold">{value}</p>
     </div>
   </div>
 );
-
-const THEME_CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap');
-
-.ld-root {
-  background: radial-gradient(circle at 15% 0%, #0f2a1c 0%, #071510 55%, #05100b 100%);
-  color: #eaf5ee;
-  font-family: 'Work Sans', sans-serif;
-}
-
-/* Reserves space so page content clears a fixed/sticky navbar.
-   Adjust this value to match your navbar's actual height. */
-.ld-page-offset {
-  padding-top: 6rem;
-}
-@media (max-width: 768px) {
-  .ld-page-offset { padding-top: 5rem; }
-}
-
-.ld-title {
-  font-family: 'Fraunces', serif;
-  font-weight: 600;
-  color: #eefaf1;
-  letter-spacing: -0.01em;
-}
-
-.ld-muted { color: #8ba99a; }
-
-.ld-price {
-  font-family: 'Fraunces', serif;
-  font-weight: 700;
-  font-size: 2.25rem;
-  background: linear-gradient(90deg, #6ee7b7, #34d399 60%, #a7f3d0);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-.ld-price-suffix { font-size: 1rem; color: #8ba99a; -webkit-text-fill-color: #8ba99a; }
-
-.ld-image-frame {
-  position: relative;
-  border-radius: 1rem;
-  overflow: hidden;
-  box-shadow: 0 20px 60px -20px rgba(0,0,0,0.6), 0 0 0 1px rgba(110,231,183,0.08);
-}
-.ld-image-glow {
-  position: absolute; inset: 0; pointer-events: none; border-radius: 1rem;
-  box-shadow: inset 0 0 60px rgba(52,211,153,0.08);
-}
-.ld-badge {
-  position: absolute; top: 14px; left: 14px;
-  padding: 6px 14px; border-radius: 999px;
-  font-size: 0.75rem; font-weight: 600; letter-spacing: 0.03em;
-  backdrop-filter: blur(6px);
-  animation: floatBadge 3.2s ease-in-out infinite;
-}
-.ld-badge-mint { background: rgba(52,211,153,0.18); color: #a7f3d0; border: 1px solid rgba(167,243,208,0.35); }
-.ld-badge-gold { background: rgba(251,191,36,0.15); color: #fcd34d; border: 1px solid rgba(252,211,77,0.35); }
-@keyframes floatBadge { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
-
-.ld-rating-pill {
-  background: rgba(251,191,36,0.12);
-  color: #fcd34d;
-  border: 1px solid rgba(252,211,77,0.25);
-  padding: 4px 12px; border-radius: 999px; font-size: 0.95rem; font-weight: 600;
-}
-
-.ld-chip {
-  display: flex; align-items: center; gap: 10px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(110,231,183,0.1);
-  border-radius: 0.85rem; padding: 12px 14px;
-  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
-}
-.ld-chip:hover {
-  transform: translateY(-2px);
-  border-color: rgba(110,231,183,0.3);
-  background: rgba(52,211,153,0.05);
-}
-.ld-chip-icon { font-size: 1.2rem; }
-.ld-chip-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6f8f7d; }
-.ld-chip-value { font-weight: 600; color: #eefaf1; font-size: 0.92rem; }
-
-.ld-panel {
-  background: linear-gradient(180deg, rgba(21,48,31,0.65), rgba(15,35,24,0.55));
-  border: 1px solid rgba(110,231,183,0.14);
-  border-radius: 1.1rem;
-  padding: 1.75rem;
-  backdrop-filter: blur(10px);
-}
-.ld-panel-gold { border-color: rgba(252,211,77,0.18); }
-.ld-panel-title {
-  font-family: 'Fraunces', serif;
-  font-size: 1.4rem; font-weight: 600; color: #eefaf1; margin-bottom: 1.1rem;
-}
-
-.ld-label { font-size: 0.85rem; font-weight: 600; color: #a7f3d0; }
-
-.ld-input {
-  width: 100%;
-  background: rgba(4,20,13,0.6);
-  border: 1px solid rgba(110,231,183,0.18);
-  color: #eaf5ee;
-  border-radius: 0.7rem;
-  padding: 0.75rem 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-.ld-input:focus {
-  outline: none;
-  border-color: #34d399;
-  box-shadow: 0 0 0 3px rgba(52,211,153,0.15);
-}
-.ld-textarea { resize: vertical; margin-top: 0.5rem; }
-
-.ld-summary {
-  background: rgba(4,20,13,0.55);
-  border: 1px solid rgba(110,231,183,0.12);
-  border-radius: 0.9rem;
-  padding: 1.1rem 1.3rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
-}
-.ld-summary-active {
-  border-color: rgba(52,211,153,0.4);
-  box-shadow: 0 0 24px -6px rgba(52,211,153,0.25);
-}
-.ld-summary-text { color: #eefaf1; }
-.ld-divider { height: 1px; background: rgba(110,231,183,0.14); }
-.ld-total {
-  font-family: 'Fraunces', serif;
-  font-size: 1.6rem;
-  color: #6ee7b7;
-}
-
-.ld-btn-primary {
-  background: linear-gradient(90deg, #16a34a, #34d399);
-  color: #04140d;
-  font-weight: 700;
-  padding: 0.85rem 1.5rem;
-  border-radius: 0.8rem;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-  box-shadow: 0 8px 24px -8px rgba(52,211,153,0.5);
-}
-.ld-btn-primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 32px -8px rgba(52,211,153,0.65);
-}
-.ld-btn-primary:disabled {
-  background: #2a3a32; color: #6f8f7d; cursor: not-allowed; box-shadow: none;
-}
-
-.ld-star-btn { background: none; border: none; cursor: pointer; font-size: 1.6rem; line-height: 1; padding: 2px; transition: transform 0.15s ease; }
-.ld-star-btn:hover { transform: scale(1.15); }
-.ld-star-filled { color: #fbbf24; text-shadow: 0 0 10px rgba(251,191,36,0.5); }
-.ld-star-empty { color: #2f4438; }
-
-.ld-review-card {
-  background: rgba(255,255,255,0.025);
-  border: 1px solid rgba(110,231,183,0.1);
-  border-radius: 1rem;
-  padding: 1.4rem;
-  margin-bottom: 1rem;
-  transition: transform 0.25s ease, border-color 0.25s ease;
-}
-.ld-review-card:hover { transform: translateY(-2px); border-color: rgba(110,231,183,0.25); }
-.ld-review-name { font-weight: 600; color: #eefaf1; }
-.ld-star-line { color: #fbbf24; margin-top: 2px; font-size: 0.9rem; }
-.ld-star-empty-line { color: #2f4438; }
-.ld-avatar {
-  width: 40px; height: 40px; border-radius: 999px;
-  display: flex; align-items: center; justify-content: center;
-  background: linear-gradient(135deg, #34d399, #16a34a);
-  color: #04140d; font-weight: 700; flex-shrink: 0;
-}
-
-.ld-skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(110,231,183,0.08) 37%, rgba(255,255,255,0.03) 63%);
-  background-size: 400% 100%;
-  animation: shimmer 1.4s ease infinite;
-}
-@keyframes shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
-
-.ld-reveal {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.ld-reveal-in { opacity: 1; transform: translateY(0); }
-.ld-reveal-delay-1 { transition-delay: 0.08s; }
-.ld-reveal-delay-2 { transition-delay: 0.16s; }
-`;
 
 export default ListingDetails;
