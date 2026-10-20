@@ -1,3 +1,11 @@
+/*
+  OrganicFarm – Add Listing (Design System v2: light & simple)
+  Same tokens and patterns as the other app pages:
+  page #F6F8F4 · card #FFFFFF · soft green #EAF4E6 · border #E4E8E1 (strong #D5DBD0)
+  text #1F2A1C · muted #5B6559 · subtle #7A8576 · primary #2E7D32 (hover #256628)
+  Fonts (index.html): Inter only
+*/
+
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,6 +27,14 @@ import {
   Wrench,
 } from "lucide-react";
 import api from "../services/api";
+
+/* ───────────────── shared style primitives ───────────────── */
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F8F4]";
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-5 h-12 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnPrimary = `${btn} bg-[#2E7D32] text-white hover:bg-[#256628]`;
+const fieldBase =
+  "w-full bg-white border border-[#D5DBD0] rounded-xl text-[15px] text-[#1F2A1C] placeholder:text-[#7A8576] outline-none transition-colors duration-200 focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20";
 
 /* ───────────────── category data ───────────────── */
 const SALE_CATEGORIES = [
@@ -47,11 +63,18 @@ const RENT_CATEGORIES = [
 const QUANTITY_TYPES = ["kg", "quintal", "unit", "litre", "dozen", "tonne"];
 
 /* ───────────────── small reusables ───────────────── */
-function Label({ children, required }) {
+function Label({ children, required, htmlFor }) {
   return (
-    <label className="block text-[11px] font-['Space_Mono',monospace] uppercase tracking-widest text-white/40 mb-2.5">
+    <label
+      htmlFor={htmlFor}
+      className="block text-sm font-medium text-[#1F2A1C] mb-2"
+    >
       {children}
-      {required && <span className="text-red-400 ml-1">*</span>}
+      {required && (
+        <span className="text-red-600 ml-1" aria-hidden="true">
+          *
+        </span>
+      )}
     </label>
   );
 }
@@ -62,15 +85,14 @@ function Input({ icon: Icon, className = "", ...props }) {
       {Icon && (
         <Icon
           size={15}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none"
+          aria-hidden="true"
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A8576] pointer-events-none"
         />
       )}
       <input
+        id={props.name}
         {...props}
-        className={`w-full bg-white/5 border border-white/10 rounded-xl py-3.5 text-[15px] text-white
-          placeholder:text-white/20 outline-none
-          focus:border-[#5C9E31]/55 focus:bg-white/8 focus:ring-1 focus:ring-[#5C9E31]/20
-          transition-all duration-200 ${Icon ? "pl-10 pr-4" : "px-4"} ${className}`}
+        className={`${fieldBase} h-12 ${Icon ? "pl-10 pr-4" : "px-4"} ${className}`}
       />
     </div>
   );
@@ -79,23 +101,21 @@ function Input({ icon: Icon, className = "", ...props }) {
 function Card({ title, icon: Icon, children, delay = 0, accent = false }) {
   return (
     <div
-      className={`rounded-2xl border p-6 sm:p-7 animate-[riseIn_0.5s_ease-out_both]
+      className={`rounded-2xl border shadow-sm p-6 sm:p-7 animate-[riseIn_0.5s_ease-out_both] motion-reduce:animate-none
         ${
           accent
-            ? "bg-[#5C9E31]/6 border-[#5C9E31]/20"
-            : "bg-white/[0.035] border-white/8"
+            ? "bg-[#EAF4E6] border-[#2E7D32]/20"
+            : "bg-white border-[#E4E8E1]"
         }`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="flex items-center gap-2.5 mb-6">
+      <div className="flex items-center gap-3 mb-5">
         <span
-          className={`grid place-items-center w-8 h-8 rounded-xl ${accent ? "bg-[#5C9E31]/25 text-[#A8E063]" : "bg-white/8 text-white/50"}`}
+          className={`grid place-items-center w-9 h-9 rounded-xl ${accent ? "bg-white text-[#2E7D32]" : "bg-[#EAF4E6] text-[#2E7D32]"}`}
         >
-          <Icon size={16} />
+          <Icon size={17} aria-hidden="true" />
         </span>
-        <h3 className="font-['Playfair_Display',serif] text-base font-bold">
-          {title}
-        </h3>
+        <h2 className="text-lg font-semibold">{title}</h2>
       </div>
       {children}
     </div>
@@ -228,43 +248,56 @@ export default function AddListing() {
     ? "e.g. Organic Basmati Rice, Fresh Tomatoes…"
     : "e.g. Mahindra Arjun 555 DI Tractor";
 
+  const typeCard = (active) =>
+    `relative flex flex-col items-start gap-3 p-5 rounded-2xl border text-left transition-colors duration-200 ${focusRing} ${
+      active
+        ? "bg-[#EAF4E6] border-[#2E7D32]"
+        : "bg-white border-[#D5DBD0] hover:border-[#2E7D32]/50 hover:bg-[#F6F8F4]"
+    }`;
+
   /* ════════════════ RENDER ════════════════ */
   return (
-    <div className="min-h-screen bg-[#0B0F0A] text-white font-['Inter',sans-serif]">
+    <div className="min-h-screen bg-[#F6F8F4] text-[#1F2A1C] font-['Inter',sans-serif]">
       {/* ── toast ── */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl border text-sm font-semibold shadow-2xl animate-[slideRight_0.3s_ease-out] ${
+          role={toast.ok ? "status" : "alert"}
+          className={`fixed top-20 right-5 sm:right-8 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl border bg-white text-sm font-semibold shadow-lg animate-[slideRight_0.3s_ease-out] motion-reduce:animate-none ${
             toast.ok
-              ? "bg-[#0E140D] border-[#5C9E31]/40 text-[#A8E063]"
-              : "bg-[#140e0e] border-red-500/40 text-red-400"
+              ? "border-[#2E7D32]/40 text-[#256628]"
+              : "border-red-200 text-red-700"
           }`}
         >
-          {toast.ok ? <CheckCircle2 size={16} /> : <Info size={16} />}
+          {toast.ok ? (
+            <CheckCircle2 size={16} aria-hidden="true" />
+          ) : (
+            <Info size={16} aria-hidden="true" />
+          )}
           {toast.msg}
         </div>
       )}
 
       <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-28 pb-24">
         {/* ── back + heading ── */}
-        <div className="animate-[riseIn_0.4s_ease-out]">
+        <div className="animate-[riseIn_0.4s_ease-out] motion-reduce:animate-none">
           <button
+            type="button"
             onClick={() => navigate("/my-listings")}
-            className="flex items-center gap-2 text-sm text-white/35 hover:text-white transition-colors mb-8 group"
+            className={`flex items-center gap-2 text-sm font-medium text-[#5B6559] hover:text-[#1F2A1C] transition-colors duration-200 mb-6 rounded group ${focusRing}`}
           >
             <ArrowLeft
               size={15}
-              className="group-hover:-translate-x-1 transition-transform"
+              className="group-hover:-translate-x-1 transition-transform duration-200 motion-reduce:transition-none"
             />
             Back to My Listings
           </button>
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-2">
-            Seller Tools
+          <p className="text-sm font-semibold text-[#2E7D32] mb-1">
+            Seller tools
           </p>
-          <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold mb-2">
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
             Add New Listing
           </h1>
-          <p className="text-white/35 text-sm mb-10">
+          <p className="text-[#5B6559] text-sm mb-8">
             Fill in the details below to publish your product on the
             marketplace.
           </p>
@@ -272,73 +305,63 @@ export default function AddListing() {
 
         <div className="space-y-4">
           {/* ══ 1. LISTING TYPE ══ */}
-          <Card title="Listing Type" icon={Tag} delay={60}>
-            <div className="grid grid-cols-2 gap-3">
+          <Card title="Listing type" icon={Tag} delay={60}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* SALE card */}
               <button
                 type="button"
+                aria-pressed={isSale}
                 onClick={() =>
                   handleChange({ target: { name: "type", value: "sale" } })
                 }
-                className={`group relative flex flex-col items-start gap-3 p-5 rounded-2xl border text-left transition-all duration-250 overflow-hidden ${
-                  isSale
-                    ? "bg-[#5C9E31]/15 border-[#5C9E31]/50 shadow-[0_0_24px_rgba(92,158,49,0.12)]"
-                    : "bg-white/4 border-white/8 hover:border-white/18 hover:bg-white/6"
-                }`}
+                className={typeCard(isSale)}
               >
                 <span
-                  className={`grid place-items-center w-10 h-10 rounded-xl transition-colors ${isSale ? "bg-[#5C9E31]/30 text-[#A8E063]" : "bg-white/8 text-white/40"}`}
+                  className={`grid place-items-center w-10 h-10 rounded-xl transition-colors duration-200 ${isSale ? "bg-white text-[#2E7D32]" : "bg-[#EAF4E6] text-[#2E7D32]"}`}
                 >
-                  <ShoppingBag size={19} />
+                  <ShoppingBag size={19} aria-hidden="true" />
                 </span>
                 <div>
-                  <p
-                    className={`font-semibold ${isSale ? "text-[#A8E063]" : "text-white/75"}`}
-                  >
-                    For Sale
-                  </p>
-                  <p className="text-xs text-white/35 mt-0.5 leading-relaxed">
+                  <p className="font-semibold">For Sale</p>
+                  <p className="text-[13px] text-[#5B6559] mt-0.5 leading-relaxed">
                     Sell crops, produce or farm goods directly to buyers.
                   </p>
                 </div>
                 {isSale && (
-                  <span className="absolute top-3 right-3 flex items-center justify-center w-5 h-5 rounded-full bg-[#5C9E31] shadow-[0_0_10px_rgba(92,158,49,0.6)]">
-                    <CheckCircle2 size={12} className="text-white" />
-                  </span>
+                  <CheckCircle2
+                    size={20}
+                    aria-hidden="true"
+                    className="absolute top-4 right-4 text-[#2E7D32]"
+                  />
                 )}
               </button>
 
               {/* RENT card */}
               <button
                 type="button"
+                aria-pressed={!isSale}
                 onClick={() =>
                   handleChange({ target: { name: "type", value: "rent" } })
                 }
-                className={`group relative flex flex-col items-start gap-3 p-5 rounded-2xl border text-left transition-all duration-250 overflow-hidden ${
-                  !isSale
-                    ? "bg-sky-500/12 border-sky-500/45 shadow-[0_0_24px_rgba(14,165,233,0.1)]"
-                    : "bg-white/4 border-white/8 hover:border-white/18 hover:bg-white/6"
-                }`}
+                className={typeCard(!isSale)}
               >
                 <span
-                  className={`grid place-items-center w-10 h-10 rounded-xl transition-colors ${!isSale ? "bg-sky-500/20 text-sky-400" : "bg-white/8 text-white/40"}`}
+                  className={`grid place-items-center w-10 h-10 rounded-xl transition-colors duration-200 ${!isSale ? "bg-white text-[#2E7D32]" : "bg-[#EAF4E6] text-[#2E7D32]"}`}
                 >
-                  <Tractor size={19} />
+                  <Tractor size={19} aria-hidden="true" />
                 </span>
                 <div>
-                  <p
-                    className={`font-semibold ${!isSale ? "text-sky-400" : "text-white/75"}`}
-                  >
-                    For Rent
-                  </p>
-                  <p className="text-xs text-white/35 mt-0.5 leading-relaxed">
+                  <p className="font-semibold">For Rent</p>
+                  <p className="text-[13px] text-[#5B6559] mt-0.5 leading-relaxed">
                     Rent out machinery, equipment or tools per day.
                   </p>
                 </div>
                 {!isSale && (
-                  <span className="absolute top-3 right-3 flex items-center justify-center w-5 h-5 rounded-full bg-sky-500 shadow-[0_0_10px_rgba(14,165,233,0.5)]">
-                    <CheckCircle2 size={12} className="text-white" />
-                  </span>
+                  <CheckCircle2
+                    size={20}
+                    aria-hidden="true"
+                    className="absolute top-4 right-4 text-[#2E7D32]"
+                  />
                 )}
               </button>
             </div>
@@ -346,7 +369,7 @@ export default function AddListing() {
 
           {/* ══ 2. CATEGORY ══ */}
           <Card
-            title={isSale ? "Product Category" : "Equipment Category"}
+            title={isSale ? "Product category" : "Equipment category"}
             icon={isSale ? Sprout : Wrench}
             delay={120}
           >
@@ -357,19 +380,20 @@ export default function AddListing() {
                   <button
                     key={value}
                     type="button"
+                    aria-pressed={active}
                     onClick={() =>
                       setFormData((p) => ({ ...p, category: value }))
                     }
-                    className={`flex flex-col items-center gap-1.5 px-3 py-3.5 rounded-xl border text-center transition-all duration-200 ${
+                    className={`flex flex-col items-center gap-1.5 px-3 py-3.5 rounded-xl border text-center transition-colors duration-200 ${focusRing} ${
                       active
-                        ? isSale
-                          ? "bg-[#5C9E31]/18 border-[#5C9E31]/50 text-[#A8E063]"
-                          : "bg-sky-500/15 border-sky-500/45 text-sky-400"
-                        : "bg-white/4 border-white/8 text-white/45 hover:border-white/18 hover:text-white hover:bg-white/7"
+                        ? "bg-[#EAF4E6] border-[#2E7D32] text-[#256628]"
+                        : "bg-white border-[#D5DBD0] text-[#5B6559] hover:border-[#2E7D32]/50 hover:text-[#1F2A1C] hover:bg-[#F6F8F4]"
                     }`}
                   >
-                    <span className="text-xl leading-none">{emoji}</span>
-                    <span className="text-[11px] font-medium leading-tight">
+                    <span className="text-xl leading-none" aria-hidden="true">
+                      {emoji}
+                    </span>
+                    <span className="text-xs font-medium leading-tight">
                       {value}
                     </span>
                   </button>
@@ -377,15 +401,17 @@ export default function AddListing() {
               })}
             </div>
             {formData.category && (
-              <p className="mt-4 text-xs flex items-center gap-1.5 text-white/35">
+              <p
+                className="mt-4 text-[13px] flex items-center gap-1.5 text-[#5B6559]"
+                aria-live="polite"
+              >
                 <CheckCircle2
-                  size={11}
-                  className={isSale ? "text-[#A8E063]" : "text-sky-400"}
+                  size={13}
+                  className="text-[#2E7D32]"
+                  aria-hidden="true"
                 />
                 Selected:{" "}
-                <span
-                  className={`font-semibold ${isSale ? "text-[#A8E063]" : "text-sky-400"}`}
-                >
+                <span className="font-semibold text-[#256628]">
                   {formData.category}
                 </span>
               </p>
@@ -393,9 +419,23 @@ export default function AddListing() {
           </Card>
 
           {/* ══ 3. IMAGE ══ */}
-          <Card title="Product Image" icon={ImagePlus} delay={180}>
+          <Card title="Product image" icon={ImagePlus} delay={180}>
+            {/* file input stays mounted so the remove/reset logic always has a ref */}
+            <input
+              ref={fileRef}
+              id="listing-image"
+              type="file"
+              accept="image/*"
+              onChange={(e) => handleImage(e.target.files[0])}
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
             {!preview ? (
               <div
+                role="button"
+                tabIndex={0}
+                aria-label="Upload product image"
                 onDrop={onDrop}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -403,64 +443,66 @@ export default function AddListing() {
                 }}
                 onDragLeave={() => setDragOver(false)}
                 onClick={() => fileRef.current?.click()}
-                className={`flex flex-col items-center justify-center gap-4 h-52 rounded-2xl border-2 border-dashed cursor-pointer transition-all duration-200 ${
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    fileRef.current?.click();
+                  }
+                }}
+                className={`flex flex-col items-center justify-center gap-4 h-52 rounded-2xl border-2 border-dashed cursor-pointer transition-colors duration-200 ${focusRing} ${
                   dragOver
-                    ? "border-[#5C9E31] bg-[#5C9E31]/10"
-                    : "border-white/10 hover:border-[#5C9E31]/40 hover:bg-white/3"
+                    ? "border-[#2E7D32] bg-[#EAF4E6]"
+                    : "border-[#D5DBD0] bg-[#F6F8F4] hover:border-[#2E7D32]/60 hover:bg-[#EAF4E6]/60"
                 }`}
               >
-                <span className="grid place-items-center w-14 h-14 rounded-2xl bg-white/6 border border-white/10">
-                  <Upload size={22} className="text-white/30" />
+                <span className="grid place-items-center w-14 h-14 rounded-2xl bg-white border border-[#E4E8E1] text-[#2E7D32]">
+                  <Upload size={22} aria-hidden="true" />
                 </span>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-white/55">
+                <div className="text-center px-4">
+                  <p className="text-sm font-medium">
                     Drop image here or{" "}
-                    <span
-                      className={isSale ? "text-[#A8E063]" : "text-sky-400"}
-                    >
+                    <span className="text-[#2E7D32] font-semibold">
                       click to upload
                     </span>
                   </p>
-                  <p className="text-xs text-white/25 mt-1">
+                  <p className="text-xs text-[#5B6559] mt-1">
                     JPG, PNG, WEBP — max 10 MB
                   </p>
                 </div>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => handleImage(e.target.files[0])}
-                  className="hidden"
-                />
               </div>
             ) : (
-              <div className="relative rounded-2xl overflow-hidden group">
+              <div className="relative rounded-2xl overflow-hidden border border-[#E4E8E1]">
                 <img
                   src={preview}
-                  alt="preview"
+                  alt="Listing preview"
                   className="w-full h-60 object-cover"
                 />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <button
-                    onClick={removeImage}
-                    className="flex items-center gap-2 px-4 py-2.5 bg-red-500/90 hover:bg-red-500 text-white text-sm font-semibold rounded-xl active:scale-95 transition-all"
-                  >
-                    <X size={14} /> Remove
-                  </button>
-                </div>
-                <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/60 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs text-white/65">
-                  <CheckCircle2 size={11} className="text-[#A8E063]" />{" "}
-                  {image?.name}
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className={`absolute top-3 right-3 flex items-center gap-1.5 px-3.5 h-10 bg-white text-red-700 border border-red-200 hover:bg-red-50 text-sm font-semibold rounded-xl shadow-sm active:scale-[0.98] transition-colors duration-200 ${focusRing}`}
+                >
+                  <X size={14} /> Remove
+                </button>
+                <div className="absolute bottom-3 left-3 max-w-[calc(100%-1.5rem)] flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-full text-xs font-medium text-[#1F2A1C] shadow-sm">
+                  <CheckCircle2
+                    size={12}
+                    className="text-[#2E7D32] shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span className="truncate">{image?.name}</span>
                 </div>
               </div>
             )}
           </Card>
 
           {/* ══ 4. DETAILS ══ */}
-          <Card title="Listing Details" icon={FileText} delay={240}>
+          <Card title="Listing details" icon={FileText} delay={240}>
             <div className="space-y-5">
               <div>
-                <Label required>Title</Label>
+                <Label required htmlFor="title">
+                  Title
+                </Label>
                 <Input
                   name="title"
                   value={formData.title}
@@ -469,8 +511,11 @@ export default function AddListing() {
                 />
               </div>
               <div>
-                <Label required>Description</Label>
+                <Label required htmlFor="description">
+                  Description
+                </Label>
                 <textarea
+                  id="description"
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
@@ -480,10 +525,7 @@ export default function AddListing() {
                       ? "Describe the produce — variety, quality, freshness, how it was grown…"
                       : "Describe the equipment — model, age, capacity, condition, service history…"
                   }
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3.5 text-[15px] text-white
-                    placeholder:text-white/20 outline-none resize-none
-                    focus:border-[#5C9E31]/55 focus:bg-white/8 focus:ring-1 focus:ring-[#5C9E31]/20
-                    transition-all duration-200"
+                  className={`${fieldBase} px-4 py-3.5 resize-none`}
                 />
               </div>
             </div>
@@ -493,9 +535,14 @@ export default function AddListing() {
           <Card title="Pricing" icon={Tag} delay={300} accent={true}>
             {isSale ? (
               <div>
-                <Label required>Sale Price (₹)</Label>
+                <Label required htmlFor="price">
+                  Sale price (₹)
+                </Label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 font-['Space_Mono',monospace] text-sm pointer-events-none">
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5B6559] text-sm pointer-events-none z-10"
+                  >
                     ₹
                   </span>
                   <Input
@@ -508,16 +555,21 @@ export default function AddListing() {
                     className="pl-8"
                   />
                 </div>
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-white/30">
-                  <Info size={11} /> Set a fair, market-competitive price per
-                  unit.
+                <p className="mt-2 flex items-center gap-1.5 text-[13px] text-[#5B6559]">
+                  <Info size={12} aria-hidden="true" /> Set a fair,
+                  market-competitive price per unit.
                 </p>
               </div>
             ) : (
               <div>
-                <Label required>Rent Per Day (₹)</Label>
+                <Label required htmlFor="rentPerDay">
+                  Rent per day (₹)
+                </Label>
                 <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30 font-['Space_Mono',monospace] text-sm pointer-events-none">
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[#5B6559] text-sm pointer-events-none z-10"
+                  >
                     ₹
                   </span>
                   <Input
@@ -530,19 +582,21 @@ export default function AddListing() {
                     className="pl-8"
                   />
                 </div>
-                <p className="mt-2 flex items-center gap-1.5 text-xs text-white/30">
-                  <Info size={11} /> Daily rental rate — buyers can book for
-                  multiple days.
+                <p className="mt-2 flex items-center gap-1.5 text-[13px] text-[#5B6559]">
+                  <Info size={12} aria-hidden="true" /> Daily rental rate —
+                  buyers can book for multiple days.
                 </p>
               </div>
             )}
           </Card>
 
           {/* ══ 6. QUANTITY ══ */}
-          <Card title="Stock & Quantity" icon={Package} delay={360}>
+          <Card title="Stock & quantity" icon={Package} delay={360}>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label required>Quantity</Label>
+                <Label required htmlFor="quantity">
+                  Quantity
+                </Label>
                 <Input
                   name="quantity"
                   type="number"
@@ -553,25 +607,27 @@ export default function AddListing() {
                 />
               </div>
               <div>
-                <Label required>Unit</Label>
+                <Label required htmlFor="quantityType">
+                  Unit
+                </Label>
                 <div className="relative">
                   <select
+                    id="quantityType"
                     name="quantityType"
                     value={formData.quantityType}
                     onChange={handleChange}
-                    className="w-full appearance-none bg-white/5 border border-white/10 rounded-xl px-4 py-3.5
-                      text-[15px] text-white outline-none cursor-pointer pr-9
-                      focus:border-[#5C9E31]/55 focus:bg-white/8 transition-all duration-200"
+                    className={`${fieldBase} h-12 appearance-none px-4 pr-9 cursor-pointer`}
                   >
                     {QUANTITY_TYPES.map((u) => (
-                      <option key={u} value={u} className="bg-[#0E140D]">
+                      <option key={u} value={u}>
                         {u}
                       </option>
                     ))}
                   </select>
                   <ChevronDown
                     size={14}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/25 pointer-events-none"
+                    aria-hidden="true"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A8576] pointer-events-none"
                   />
                 </div>
               </div>
@@ -580,7 +636,9 @@ export default function AddListing() {
 
           {/* ══ 7. LOCATION ══ */}
           <Card title="Location" icon={MapPin} delay={420}>
-            <Label required>City / District / State</Label>
+            <Label required htmlFor="location">
+              City / District / State
+            </Label>
             <Input
               icon={MapPin}
               name="location"
@@ -591,34 +649,33 @@ export default function AddListing() {
           </Card>
 
           {/* ══ SUBMIT ══ */}
-          <div className="animate-[riseIn_0.5s_ease-out_0.5s_both]">
+          <div className="animate-[riseIn_0.5s_ease-out_0.5s_both] motion-reduce:animate-none pt-2">
             <button
+              type="button"
               onClick={handleSubmit}
               disabled={loading}
-              className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-semibold text-[16px]
-                transition-all duration-200 active:scale-[0.99] disabled:opacity-50
-                ${
-                  isSale
-                    ? "bg-[#5C9E31] hover:bg-[#4E8A28] shadow-[0_0_30px_rgba(92,158,49,0.4)] hover:shadow-[0_0_45px_rgba(92,158,49,0.55)]"
-                    : "bg-sky-600 hover:bg-sky-700 shadow-[0_0_30px_rgba(14,165,233,0.35)] hover:shadow-[0_0_45px_rgba(14,165,233,0.5)]"
-                }`}
+              className={`${btnPrimary} w-full h-14 text-base disabled:opacity-60`}
             >
               {loading ? (
                 <>
-                  <Loader2 size={20} className="animate-spin" /> Publishing
-                  listing…
+                  <Loader2
+                    size={20}
+                    className="animate-spin motion-reduce:animate-none"
+                  />{" "}
+                  Publishing listing…
                 </>
               ) : isSale ? (
                 <>
-                  <Sprout size={20} /> Publish Sale Listing
+                  <Sprout size={20} aria-hidden="true" /> Publish Sale Listing
                 </>
               ) : (
                 <>
-                  <Tractor size={20} /> Publish Rental Listing
+                  <Tractor size={20} aria-hidden="true" /> Publish Rental
+                  Listing
                 </>
               )}
             </button>
-            <p className="text-center text-xs text-white/20 mt-4">
+            <p className="text-center text-[13px] text-[#5B6559] mt-4">
               Your listing goes live on the marketplace immediately after
               publishing.
             </p>
@@ -628,11 +685,11 @@ export default function AddListing() {
 
       <style>{`
         @keyframes riseIn {
-          from { opacity:0; transform:translateY(16px); }
+          from { opacity:0; transform:translateY(12px); }
           to   { opacity:1; transform:translateY(0); }
         }
         @keyframes slideRight {
-          from { transform:translateX(40px); opacity:0; }
+          from { transform:translateX(24px); opacity:0; }
           to   { transform:translateX(0);    opacity:1; }
         }
       `}</style>
