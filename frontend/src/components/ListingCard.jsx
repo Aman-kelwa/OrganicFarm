@@ -42,7 +42,6 @@ const CAT_COLOR = {
 const getCatColor = (cat) =>
   CAT_COLOR[cat] ?? "bg-slate-100 text-slate-700 border-slate-200";
 
-/* ════════════════════════════════════════════════ */
 export default function ListingCard({ item, viewMode = "grid" }) {
   const navigate = useNavigate();
   const [adding, setAdding] = useState(false);
@@ -58,7 +57,7 @@ export default function ListingCard({ item, viewMode = "grid" }) {
   })();
 
   const handleAddToCart = async (e) => {
-    e.preventDefault(); // don't navigate if card is wrapped in a Link
+    e.preventDefault(); // don't navigate if card is wrapped in a Link //
     const token = localStorage.getItem("token");
     if (!token) {
       navigate("/login");
