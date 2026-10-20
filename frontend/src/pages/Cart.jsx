@@ -22,7 +22,23 @@ import {
 } from "lucide-react";
 import api from "../services/api";
 
-/* ── reveal ── */
+/* ════════════════════════════════════════════════════
+   SHARED STYLE CONSTANTS
+   (same names as in Listings.jsx / ListingCard.jsx — move
+   them into one shared file, e.g. src/styles/ui.js)
+   ════════════════════════════════════════════════════ */
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2";
+const CONTAINER = "max-w-7xl mx-auto px-5 sm:px-8";
+const CARD = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+const BTN = `inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold transition-colors duration-200 ${FOCUS}`;
+const BTN_PRIMARY = `${BTN} bg-[#2E7D32] text-white hover:bg-[#256628] disabled:opacity-60 disabled:cursor-not-allowed`;
+const BTN_OUTLINE = `${BTN} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+const ICON_BTN = `grid place-items-center h-10 w-10 shrink-0 rounded-xl text-[#7A8576] hover:bg-[#F6F8F4] transition-colors duration-200 ${FOCUS}`;
+const TAG_BASE =
+  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold";
+
+/* ── reveal: 600ms fade + 16px slide, once (`hero` = gentler 12px) ── */
 function useReveal(threshold = 0.06) {
   const ref = useRef(null);
   const [v, setV] = useState(false);
@@ -43,14 +59,16 @@ function useReveal(threshold = 0.06) {
   }, []);
   return [ref, v];
 }
-function Reveal({ children, delay = 0, className = "" }) {
+function Reveal({ children, className = "", hero = false }) {
   const [ref, v] = useReveal();
   return (
     <div
       ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-600 ease-out
-        ${v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"} ${className}`}
+      className={`transition-[opacity,transform] duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:transform-none ${
+        v
+          ? "opacity-100 translate-y-0"
+          : `opacity-0 motion-reduce:opacity-100 ${hero ? "translate-y-3" : "translate-y-4"}`
+      } ${className}`}
     >
       {children}
     </div>
@@ -60,14 +78,16 @@ function Reveal({ children, delay = 0, className = "" }) {
 /* ── skeleton ── */
 function CartSkeleton() {
   return (
-    <div className="flex gap-5 rounded-2xl bg-[#0a140a] border border-[#182e14] p-5 animate-pulse">
-      <div className="w-28 h-28 rounded-xl bg-white/8 shrink-0" />
+    <div
+      className={`${CARD} flex gap-5 p-5 animate-pulse motion-reduce:animate-none`}
+    >
+      <div className="h-24 w-24 sm:h-32 sm:w-32 rounded-xl bg-[#E4E8E1] shrink-0" />
       <div className="flex-1 space-y-3 py-1">
-        <div className="h-4 bg-white/10 rounded-full w-3/4" />
-        <div className="h-3 bg-white/7  rounded-full w-1/3" />
-        <div className="flex gap-2 mt-4">
-          <div className="h-9 w-24 bg-white/8 rounded-xl" />
-          <div className="h-9 w-20 bg-white/8 rounded-xl" />
+        <div className="h-4 bg-[#E4E8E1] rounded-full w-3/4" />
+        <div className="h-3 bg-[#E4E8E1] rounded-full w-1/3" />
+        <div className="flex gap-2 pt-4">
+          <div className="h-10 w-28 bg-[#E4E8E1] rounded-xl" />
+          <div className="h-10 w-20 bg-[#E4E8E1] rounded-xl" />
         </div>
       </div>
     </div>
@@ -76,44 +96,62 @@ function CartSkeleton() {
 
 /* ── delete confirm modal ── */
 function RemoveModal({ title, onConfirm, onCancel }) {
+  const cancelRef = useRef(null);
+
+  useEffect(() => {
+    cancelRef.current?.focus();
+    const onKey = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        aria-hidden="true"
+        className="absolute inset-0 bg-[#1F2A1C]/40"
         onClick={onCancel}
       />
       <div
-        className="relative w-full max-w-sm bg-[#0a140a] border border-[#1e3a18] rounded-3xl p-7
-        shadow-[0_30px_80px_rgba(0,0,0,0.8)] animate-[popIn_0.25s_cubic-bezier(0.34,1.56,0.64,1)]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="remove-modal-title"
+        className="relative w-full max-w-sm rounded-2xl border border-[#E4E8E1] bg-white p-6 shadow-xl animate-[modalIn_0.2s_ease-out] motion-reduce:animate-none"
       >
         <div className="flex items-center gap-4 mb-5">
-          <span className="grid place-items-center w-12 h-12 rounded-2xl bg-red-500/12 border border-red-500/25 shrink-0">
-            <Trash2 size={20} className="text-red-400" />
+          <span className="grid place-items-center h-12 w-12 rounded-xl border border-red-200 bg-red-50 shrink-0">
+            <Trash2 size={20} aria-hidden="true" className="text-red-800" />
           </span>
           <div>
-            <h3 className="font-['Playfair_Display',serif] text-lg font-bold">
+            <h3
+              id="remove-modal-title"
+              className="text-lg font-semibold text-[#1F2A1C]"
+            >
               Remove item?
             </h3>
-            <p className="text-xs text-white/40 mt-0.5">
+            <p className="text-sm text-[#5B6559] mt-0.5">
               This will be removed from your cart.
             </p>
           </div>
         </div>
-        <p className="text-sm text-white/55 bg-white/4 border border-white/8 rounded-xl px-4 py-3 mb-6 line-clamp-1">
-          "{title}"
+        <p className="text-sm text-[#5B6559] bg-[#F6F8F4] border border-[#E4E8E1] rounded-xl px-4 py-3 mb-6 line-clamp-1">
+          “{title}”
         </p>
         <div className="flex gap-3">
           <button
+            ref={cancelRef}
+            type="button"
             onClick={onCancel}
-            className="flex-1 py-3 rounded-xl border border-white/12 text-white/60
-              hover:bg-white/6 font-semibold text-sm transition-all active:scale-95"
+            className={`${BTN_OUTLINE} flex-1 px-4`}
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            className="flex-1 py-3 rounded-xl bg-red-500/90 hover:bg-red-500 text-white
-              font-semibold text-sm transition-all active:scale-95 shadow-[0_0_16px_rgba(239,68,68,0.3)]"
+            className={`${BTN} flex-1 px-4 bg-red-700 text-white hover:bg-red-800`}
           >
             Remove
           </button>
@@ -125,32 +163,44 @@ function RemoveModal({ title, onConfirm, onCancel }) {
 
 /* ── quantity stepper ── */
 function QuantityStepper({ quantity, listingId, stock, onUpdate, updating }) {
+  const stepBtn = `grid place-items-center h-8 w-8 rounded-lg text-[#5B6559] hover:bg-[#F6F8F4] hover:text-[#1F2A1C] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors duration-200 ${FOCUS}`;
   return (
-    <div className="flex items-center gap-0.5 bg-[#0f1f0d] border border-[#1e3a18] rounded-xl p-1">
+    <div
+      role="group"
+      aria-label="Quantity"
+      className="flex h-10 items-center gap-0.5 rounded-xl border border-[#D5DBD0] bg-white p-1"
+    >
       <button
+        type="button"
         disabled={quantity <= 1 || updating}
         onClick={() => onUpdate(listingId, quantity - 1)}
-        className="w-8 h-8 rounded-lg grid place-items-center text-white/50
-          hover:bg-white/8 hover:text-white disabled:opacity-25 disabled:cursor-not-allowed
-          transition-all active:scale-90"
+        aria-label="Decrease quantity"
+        className={stepBtn}
       >
-        <Minus size={14} />
+        <Minus size={14} aria-hidden="true" />
       </button>
-      <span className="w-9 text-center text-sm font-bold text-white">
+      <span
+        aria-live="polite"
+        className="w-9 text-center text-sm font-semibold text-[#1F2A1C]"
+      >
         {updating ? (
-          <Loader2 size={14} className="animate-spin mx-auto text-[#A8E063]" />
+          <Loader2
+            size={14}
+            aria-label="Updating"
+            className="animate-spin motion-reduce:animate-none mx-auto text-[#2E7D32]"
+          />
         ) : (
           quantity
         )}
       </span>
       <button
+        type="button"
         disabled={quantity >= (stock ?? 99) || updating}
         onClick={() => onUpdate(listingId, quantity + 1)}
-        className="w-8 h-8 rounded-lg grid place-items-center text-white/50
-          hover:bg-white/8 hover:text-white disabled:opacity-25 disabled:cursor-not-allowed
-          transition-all active:scale-90"
+        aria-label="Increase quantity"
+        className={stepBtn}
       >
-        <Plus size={14} />
+        <Plus size={14} aria-hidden="true" />
       </button>
     </div>
   );
@@ -263,7 +313,7 @@ export default function Cart() {
         name: "OrganicFarm",
         description: "Order Payment",
         order_id: data.order.id,
-        theme: { color: "#5C9E31" },
+        theme: { color: "#2E7D32" },
         handler: async (response) => {
           await verifyPayment(response);
         },
@@ -302,28 +352,30 @@ export default function Cart() {
 
   /* ════════════════ RENDER ════════════════ */
   return (
-    <div className="min-h-screen bg-[#060A06] text-white font-['Inter',sans-serif] relative">
-      {/* ambient blobs */}
-      <div
-        aria-hidden
-        className="fixed top-0 left-0 w-[600px] h-[600px] rounded-full bg-[#0d2208]/60 blur-[130px] pointer-events-none -translate-x-1/3 -translate-y-1/3"
-      />
-      <div
-        aria-hidden
-        className="fixed bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#071a04]/50 blur-[100px] pointer-events-none translate-x-1/4 translate-y-1/4"
-      />
-
+    <div className="min-h-screen bg-white text-[#1F2A1C] font-['Inter',sans-serif]">
       {/* toast */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5
-          rounded-2xl border text-sm font-semibold shadow-2xl animate-[slideRight_0.3s_ease-out] ${
+          role={toast.ok ? "status" : "alert"}
+          className={`fixed top-24 right-5 sm:right-8 z-50 flex max-w-[calc(100vw-2.5rem)] items-center gap-3 rounded-xl border px-4 py-3 text-sm font-semibold shadow-lg animate-[toastIn_0.2s_ease-out] motion-reduce:animate-none ${
             toast.ok
-              ? "bg-[#0a140a] border-[#5C9E31]/40 text-[#A8E063]"
-              : "bg-[#140a0a] border-red-500/40   text-red-400"
+              ? "border-[#E4E8E1] bg-white text-[#1F2A1C]"
+              : "border-red-200 bg-red-50 text-red-800"
           }`}
         >
-          {toast.ok ? <CheckCircle2 size={15} /> : <AlertTriangle size={15} />}
+          {toast.ok ? (
+            <CheckCircle2
+              size={16}
+              aria-hidden="true"
+              className="shrink-0 text-[#2E7D32]"
+            />
+          ) : (
+            <AlertTriangle
+              size={16}
+              aria-hidden="true"
+              className="shrink-0 text-red-800"
+            />
+          )}
           {toast.msg}
         </div>
       )}
@@ -337,297 +389,301 @@ export default function Cart() {
         />
       )}
 
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-24">
-        {/* ── HEADER ── */}
-        <Reveal>
-          <div className="flex items-center justify-between mb-10">
-            <div>
-              <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-2">
-                Buyer
-              </p>
-              <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold flex items-center gap-4">
-                My Cart
-                {!loading && !isEmpty && (
-                  <span className="text-xl font-normal text-white/30 font-['Inter',sans-serif]">
-                    ({totalItems} item{totalItems > 1 ? "s" : ""})
-                  </span>
-                )}
-              </h1>
-            </div>
-            <Link
-              to="/listings"
-              className="flex items-center gap-2 text-sm text-white/40 hover:text-white
-                transition-colors group"
-            >
-              <ArrowLeft
-                size={15}
-                className="group-hover:-translate-x-1 transition-transform"
-              />
-              Continue shopping
-            </Link>
-          </div>
-        </Reveal>
-
-        {/* ── LOADING ── */}
-        {loading && (
-          <div className="grid lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-4">
-              {[1, 2, 3].map((i) => (
-                <CartSkeleton key={i} />
-              ))}
-            </div>
-            <div className="h-72 rounded-2xl bg-[#0a140a] border border-[#182e14] animate-pulse" />
-          </div>
-        )}
-
-        {/* ── EMPTY STATE ── */}
-        {!loading && isEmpty && (
-          <Reveal>
-            <div className="flex flex-col items-center justify-center py-28 text-center">
-              <div className="relative mb-8">
-                <span className="grid place-items-center w-28 h-28 rounded-3xl bg-[#0a140a] border border-[#1e3a18]">
-                  <ShoppingCart size={46} className="text-white/12" />
-                </span>
-                <span
-                  className="absolute -top-2 -right-2 w-7 h-7 rounded-full bg-[#5C9E31]/20
-                  border border-[#5C9E31]/40 grid place-items-center"
-                >
-                  <X size={12} className="text-[#A8E063]" />
-                </span>
+      {/* ── PAGE HEADER ── */}
+      <header className="bg-[#F6F8F4] border-b border-[#E4E8E1] pt-28 pb-10 sm:pb-12">
+        <div className={CONTAINER}>
+          <Reveal hero>
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold text-[#2E7D32] mb-2">
+                  Buyer
+                </p>
+                <h1 className="flex flex-wrap items-baseline gap-x-3 text-3xl sm:text-4xl font-bold tracking-tight">
+                  My cart
+                  {!loading && !isEmpty && (
+                    <span className="text-base font-normal text-[#5B6559]">
+                      ({totalItems} item{totalItems > 1 ? "s" : ""})
+                    </span>
+                  )}
+                </h1>
               </div>
-              <h2 className="font-['Playfair_Display',serif] text-3xl font-bold mb-3">
-                Your cart is empty
-              </h2>
-              <p className="text-white/35 max-w-xs text-sm leading-relaxed mb-8">
-                Looks like you haven't added anything yet. Head to the
-                marketplace to find fresh produce and farm equipment.
-              </p>
               <Link
                 to="/listings"
-                className="flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-[#5C9E31]
-                  hover:bg-[#4e8a28] font-semibold text-sm transition-all active:scale-95
-                  shadow-[0_0_24px_rgba(92,158,49,0.4)]"
+                className={`group inline-flex items-center gap-2 rounded text-sm font-semibold text-[#2E7D32] hover:text-[#256628] transition-colors duration-200 ${FOCUS}`}
               >
-                Browse Marketplace <ArrowRight size={16} />
+                <ArrowLeft
+                  size={15}
+                  aria-hidden="true"
+                  className="transition-transform duration-200 group-hover:-translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
+                />
+                Continue shopping
               </Link>
             </div>
           </Reveal>
-        )}
+        </div>
+      </header>
 
-        {/* ── CART CONTENT ── */}
-        {!loading && !isEmpty && (
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* ── LEFT: CART ITEMS ── */}
-            <div className="lg:col-span-2 space-y-4">
-              {cart.items.map((item, i) => (
-                <Reveal key={item._id} delay={i * 60}>
-                  <div
-                    className="group relative flex gap-5 rounded-2xl bg-[#0a140a] border border-[#182e14]
-                    hover:border-[#2d5c1e] p-5 transition-all duration-300
-                    hover:shadow-[0_8px_40px_rgba(0,0,0,0.4)]"
-                  >
-                    {/* image */}
+      {/* ── CONTENT ── */}
+      <main>
+        <div className={`${CONTAINER} py-10 sm:py-12`}>
+          {/* ── LOADING ── */}
+          {loading && (
+            <div aria-busy="true" className="grid lg:grid-cols-3 gap-6">
+              <span className="sr-only">Loading your cart</span>
+              <div className="lg:col-span-2 space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <CartSkeleton key={i} />
+                ))}
+              </div>
+              <div
+                className={`${CARD} h-72 animate-pulse motion-reduce:animate-none bg-[#F6F8F4]`}
+              />
+            </div>
+          )}
+
+          {/* ── EMPTY STATE ── */}
+          {!loading && isEmpty && (
+            <Reveal>
+              <div className="flex flex-col items-center justify-center py-16 sm:py-20 text-center">
+                <span className="grid place-items-center h-16 w-16 rounded-2xl bg-[#EAF4E6] mb-6">
+                  <ShoppingCart
+                    size={28}
+                    aria-hidden="true"
+                    className="text-[#2E7D32]"
+                  />
+                </span>
+                <h2 className="text-2xl font-bold tracking-tight mb-2">
+                  Your cart is empty
+                </h2>
+                <p className="text-sm text-[#5B6559] max-w-xs leading-relaxed mb-8">
+                  Looks like you haven’t added anything yet. Head to the
+                  marketplace to find fresh produce and farm equipment.
+                </p>
+                <Link to="/listings" className={BTN_PRIMARY}>
+                  Browse marketplace <ArrowRight size={16} aria-hidden="true" />
+                </Link>
+              </div>
+            </Reveal>
+          )}
+
+          {/* ── CART CONTENT ── */}
+          {!loading && !isEmpty && (
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* ── LEFT: CART ITEMS ── */}
+              <div className="lg:col-span-2 space-y-4">
+                {cart.items.map((item) => (
+                  <Reveal key={item._id}>
                     <div
-                      className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-xl overflow-hidden
-                      bg-[#0f1f0d] border border-[#1e3a18] shrink-0"
+                      className={`group flex gap-4 sm:gap-5 p-4 sm:p-5 hover:shadow-md transition-shadow duration-200 ${CARD}`}
                     >
-                      <img
-                        src={item.listing?.image}
-                        alt={item.listing?.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
-                    </div>
-
-                    {/* info */}
-                    <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
-                      <div>
-                        {/* category + remove */}
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <span
-                            className="text-[10px] font-['Space_Mono',monospace] uppercase tracking-wider
-                            text-[#A8E063] bg-[#5C9E31]/12 border border-[#5C9E31]/25 px-2 py-0.5 rounded-full"
-                          >
-                            {item.listing?.category}
-                          </span>
-                          <button
-                            onClick={() =>
-                              setRemoving({
-                                id: item.listing?._id,
-                                title: item.listing?.title,
-                              })
-                            }
-                            className="grid place-items-center w-7 h-7 rounded-lg text-white/20
-                              hover:text-red-400 hover:bg-red-500/10 border border-transparent
-                              hover:border-red-500/20 transition-all active:scale-90 shrink-0"
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-
-                        <h2
-                          className="font-['Playfair_Display',serif] text-lg font-bold
-                          leading-snug line-clamp-1 mb-1"
-                        >
-                          {item.listing?.title}
-                        </h2>
-                        <p className="flex items-center gap-1 text-xs text-white/35 mb-3">
-                          <MapPin size={11} /> {item.listing?.location}
-                        </p>
+                      {/* image */}
+                      <div className="relative h-24 w-24 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-xl border border-[#E4E8E1] bg-[#F6F8F4]">
+                        <img
+                          src={item.listing?.image}
+                          alt={item.listing?.title}
+                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
                       </div>
 
-                      {/* quantity + price row */}
-                      <div className="flex items-center justify-between flex-wrap gap-3">
-                        <QuantityStepper
-                          quantity={item.quantity}
-                          listingId={item.listing?._id}
-                          stock={item.listing?.quantity}
-                          onUpdate={updateQuantity}
-                          updating={updating === item.listing?._id}
-                        />
+                      {/* info */}
+                      <div className="flex min-w-0 flex-1 flex-col justify-between">
+                        <div>
+                          {/* category + remove */}
+                          <div className="flex items-start justify-between gap-2">
+                            <span
+                              className={`${TAG_BASE} bg-emerald-50 text-emerald-800 border-emerald-200`}
+                            >
+                              {item.listing?.category}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setRemoving({
+                                  id: item.listing?._id,
+                                  title: item.listing?.title,
+                                })
+                              }
+                              aria-label={`Remove ${item.listing?.title ?? "item"} from cart`}
+                              className={`${ICON_BTN} -mr-2 -mt-2 hover:text-red-800`}
+                            >
+                              <Trash2 size={16} aria-hidden="true" />
+                            </button>
+                          </div>
 
-                        <div className="text-right">
-                          <p className="text-xs text-white/35">
-                            ₹{item.listing?.price} × {item.quantity}
+                          <h2 className="mt-1 line-clamp-1 text-lg font-semibold leading-snug">
+                            {item.listing?.title}
+                          </h2>
+                          <p className="mt-1 flex items-center gap-1.5 text-sm text-[#5B6559]">
+                            <MapPin
+                              size={14}
+                              aria-hidden="true"
+                              className="shrink-0"
+                            />
+                            <span className="truncate">
+                              {item.listing?.location}
+                            </span>
                           </p>
-                          <p className="font-['Playfair_Display',serif] text-xl font-bold text-[#A8E063]">
+                        </div>
+
+                        {/* quantity + price row */}
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                          <QuantityStepper
+                            quantity={item.quantity}
+                            listingId={item.listing?._id}
+                            stock={item.listing?.quantity}
+                            onUpdate={updateQuantity}
+                            updating={updating === item.listing?._id}
+                          />
+
+                          <div className="text-right">
+                            <p className="text-sm text-[#5B6559]">
+                              ₹{item.listing?.price} × {item.quantity}
+                            </p>
+                            <p className="text-xl font-bold">
+                              ₹
+                              {(
+                                item.listing?.price * item.quantity
+                              ).toLocaleString("en-IN")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))}
+
+                {/* trust badges */}
+                <Reveal>
+                  <ul className="grid sm:grid-cols-3 gap-3 pt-2">
+                    {[
+                      { icon: ShieldCheck, text: "Secure Razorpay checkout" },
+                      { icon: Truck, text: "Local-first delivery" },
+                      { icon: Leaf, text: "Verified farm sellers" },
+                    ].map(({ icon: Icon, text }) => (
+                      <li
+                        key={text}
+                        className="flex items-center gap-2.5 rounded-xl border border-[#E4E8E1] bg-[#F6F8F4] px-4 py-3 text-sm text-[#5B6559]"
+                      >
+                        <Icon
+                          size={16}
+                          aria-hidden="true"
+                          className="shrink-0 text-[#2E7D32]"
+                        />
+                        {text}
+                      </li>
+                    ))}
+                  </ul>
+                </Reveal>
+              </div>
+
+              {/* ── RIGHT: ORDER SUMMARY ── */}
+              <Reveal className="lg:sticky lg:top-24 lg:self-start">
+                <div className={`${CARD} overflow-hidden`}>
+                  {/* header */}
+                  <div className="flex items-center gap-2 border-b border-[#E4E8E1] px-6 py-5">
+                    <Tag
+                      size={17}
+                      aria-hidden="true"
+                      className="text-[#2E7D32]"
+                    />
+                    <h2 className="text-lg font-semibold">Order summary</h2>
+                  </div>
+
+                  <div className="p-6">
+                    {/* line items */}
+                    <div className="mb-5 space-y-3">
+                      {cart.items.map((item) => (
+                        <div
+                          key={item._id}
+                          className="flex items-start justify-between gap-3"
+                        >
+                          <span className="line-clamp-1 flex-1 text-sm leading-snug text-[#5B6559]">
+                            {item.listing?.title} × {item.quantity}
+                          </span>
+                          <span className="shrink-0 text-sm font-semibold">
                             ₹
                             {(
                               item.listing?.price * item.quantity
                             ).toLocaleString("en-IN")}
-                          </p>
+                          </span>
                         </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3 border-t border-[#E4E8E1] pt-4 text-sm text-[#5B6559]">
+                      <div className="flex justify-between">
+                        <span>Subtotal ({totalItems} items)</span>
+                        <span>₹{totalAmount.toLocaleString("en-IN")}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <Truck size={14} aria-hidden="true" /> Delivery
+                        </span>
+                        <span className="font-semibold text-[#2E7D32]">
+                          Free
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Platform fee</span>
+                        <span className="font-semibold text-[#2E7D32]">₹0</span>
                       </div>
                     </div>
-                  </div>
-                </Reveal>
-              ))}
 
-              {/* trust badges */}
-              <Reveal delay={cart.items.length * 60 + 60}>
-                <div className="grid sm:grid-cols-3 gap-3 mt-2">
-                  {[
-                    { icon: ShieldCheck, text: "Secure Razorpay checkout" },
-                    { icon: Truck, text: "Local-first delivery" },
-                    { icon: Leaf, text: "Verified farm sellers" },
-                  ].map(({ icon: Icon, text }) => (
-                    <div
-                      key={text}
-                      className="flex items-center gap-2.5 px-4 py-3 rounded-xl
-                        bg-[#0a140a] border border-[#182e14] text-xs text-white/40"
-                    >
-                      <Icon size={14} className="text-[#5C9E31] shrink-0" />{" "}
-                      {text}
+                    {/* total */}
+                    <div className="mt-5 flex items-center justify-between rounded-xl bg-[#EAF4E6] px-5 py-4">
+                      <span className="font-semibold">Total</span>
+                      <span className="text-2xl font-bold">
+                        ₹{totalAmount.toLocaleString("en-IN")}
+                      </span>
                     </div>
-                  ))}
+
+                    {/* checkout button */}
+                    <button
+                      type="button"
+                      onClick={handleCheckout}
+                      disabled={checkingOut}
+                      className={`${BTN_PRIMARY} mt-5 w-full`}
+                    >
+                      {checkingOut ? (
+                        <>
+                          <Loader2
+                            size={18}
+                            aria-hidden="true"
+                            className="animate-spin motion-reduce:animate-none"
+                          />{" "}
+                          Processing…
+                        </>
+                      ) : (
+                        <>
+                          <IndianRupee size={18} aria-hidden="true" /> Proceed
+                          to checkout
+                        </>
+                      )}
+                    </button>
+
+                    <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-[#7A8576]">
+                      <ShieldCheck size={12} aria-hidden="true" /> Secured by
+                      Razorpay
+                    </p>
+                  </div>
                 </div>
               </Reveal>
             </div>
-
-            {/* ── RIGHT: ORDER SUMMARY ── */}
-            <Reveal delay={80} className="lg:col-span-1">
-              <div
-                className="sticky top-24 rounded-2xl bg-[#0a140a] border border-[#1e3a18]
-                overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.5)]"
-              >
-                {/* header */}
-                <div className="px-6 py-5 border-b border-[#182e14] bg-gradient-to-r from-[#0f2a0a] to-[#0a140a]">
-                  <h2 className="font-['Playfair_Display',serif] text-xl font-bold flex items-center gap-2">
-                    <Tag size={17} className="text-[#A8E063]" /> Order Summary
-                  </h2>
-                </div>
-
-                <div className="p-6">
-                  {/* line items */}
-                  <div className="space-y-3 mb-5">
-                    {cart.items.map((item) => (
-                      <div
-                        key={item._id}
-                        className="flex justify-between items-start gap-2"
-                      >
-                        <span className="text-sm text-white/50 leading-snug line-clamp-1 flex-1">
-                          {item.listing?.title} × {item.quantity}
-                        </span>
-                        <span className="text-sm font-semibold text-white/80 shrink-0">
-                          ₹
-                          {(item.listing?.price * item.quantity).toLocaleString(
-                            "en-IN",
-                          )}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="border-t border-[#182e14] pt-4 space-y-3">
-                    <div className="flex justify-between text-sm text-white/50">
-                      <span>Subtotal ({totalItems} items)</span>
-                      <span>₹{totalAmount.toLocaleString("en-IN")}</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-white/50">
-                      <span className="flex items-center gap-1.5">
-                        <Truck size={12} /> Delivery
-                      </span>
-                      <span className="text-[#A8E063] font-semibold">FREE</span>
-                    </div>
-                    <div className="flex justify-between text-sm text-white/50">
-                      <span>Platform fee</span>
-                      <span className="text-[#A8E063] font-semibold">₹0</span>
-                    </div>
-                  </div>
-
-                  {/* total */}
-                  <div
-                    className="mt-5 rounded-xl bg-[#5C9E31]/10 border border-[#5C9E31]/25 px-5 py-4
-                    flex items-center justify-between"
-                  >
-                    <span className="font-semibold text-white/70">Total</span>
-                    <span className="font-['Playfair_Display',serif] text-2xl font-black text-[#A8E063]">
-                      ₹{totalAmount.toLocaleString("en-IN")}
-                    </span>
-                  </div>
-
-                  {/* checkout button */}
-                  <button
-                    onClick={handleCheckout}
-                    disabled={checkingOut}
-                    className="w-full mt-5 flex items-center justify-center gap-3 py-4 rounded-2xl
-                      bg-[#5C9E31] hover:bg-[#4e8a28] font-bold text-[16px] text-white
-                      transition-all active:scale-[0.98] disabled:opacity-60
-                      shadow-[0_0_28px_rgba(92,158,49,0.4)] hover:shadow-[0_0_40px_rgba(92,158,49,0.6)]"
-                  >
-                    {checkingOut ? (
-                      <>
-                        <Loader2 size={19} className="animate-spin" />{" "}
-                        Processing…
-                      </>
-                    ) : (
-                      <>
-                        <IndianRupee size={19} /> Proceed to Checkout
-                      </>
-                    )}
-                  </button>
-
-                  <p className="text-center text-xs text-white/25 mt-3 flex items-center justify-center gap-1.5">
-                    <ShieldCheck size={11} /> Secured by Razorpay
-                  </p>
-                </div>
-              </div>
-            </Reveal>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      </main>
 
       <style>{`
-        @keyframes popIn {
-          from { transform:scale(0.85); opacity:0; }
-          to   { transform:scale(1);    opacity:1; }
+        @keyframes modalIn {
+          from { transform:translateY(8px); opacity:0; }
+          to   { transform:translateY(0);   opacity:1; }
         }
-        @keyframes slideRight {
-          from { transform:translateX(40px); opacity:0; }
-          to   { transform:translateX(0);    opacity:1; }
+        @keyframes toastIn {
+          from { transform:translateY(-8px); opacity:0; }
+          to   { transform:translateY(0);    opacity:1; }
         }
       `}</style>
     </div>
