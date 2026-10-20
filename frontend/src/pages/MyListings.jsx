@@ -1,8 +1,9 @@
 /*
-  OrganicFarm – My Listings Page
-  Matches Home V2: dark editorial, Playfair + Inter + Space Mono
-  Fonts (add to index.html):
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Inter:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  OrganicFarm – My Listings (Design System v2: light & simple)
+  Same tokens and patterns as the other app pages:
+  page #F6F8F4 · card #FFFFFF · soft green #EAF4E6 · border #E4E8E1 (strong #D5DBD0)
+  text #1F2A1C · muted #5B6559 · subtle #7A8576 · primary #2E7D32 (hover #256628)
+  Fonts (index.html): Inter only
 */
 
 import { useEffect, useRef, useState } from "react";
@@ -22,7 +23,18 @@ import {
 } from "lucide-react";
 import api from "../services/api";
 
-/* ─── intersection reveal hook (same as Home) ─── */
+/* ─── shared style primitives (same as other pages) ─── */
+const container = "max-w-7xl mx-auto px-5 sm:px-8";
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F8F4]";
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-5 h-11 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnPrimary = `${btn} bg-[#2E7D32] text-white hover:bg-[#256628]`;
+const btnOutline = `${btn} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+const card = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+/* small card action buttons */
+const actionBtn = `inline-flex items-center justify-center gap-1.5 h-10 rounded-xl border border-[#D5DBD0] bg-white text-sm font-semibold text-[#1F2A1C] transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+
+/* ─── intersection reveal hook ─── */
 function useReveal(threshold = 0.12) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -48,15 +60,15 @@ function Reveal({ children, delay = 0, className = "", from = "bottom" }) {
   const [ref, visible] = useReveal();
   const translate =
     from === "left"
-      ? "-translate-x-8"
+      ? "-translate-x-4"
       : from === "right"
-        ? "translate-x-8"
-        : "translate-y-6";
+        ? "translate-x-4"
+        : "translate-y-4";
   return (
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out
+      className={`transition-all duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-x-0 motion-reduce:translate-y-0
         ${visible ? "opacity-100 translate-x-0 translate-y-0" : `opacity-0 ${translate}`}
         ${className}`}
     >
@@ -65,12 +77,12 @@ function Reveal({ children, delay = 0, className = "", from = "bottom" }) {
   );
 }
 
-/* ─── tag colour map ─── */
+/* ─── tag colour map (light tints, readable text) ─── */
 const TAG_COLOR = {
-  Crop: "bg-amber-400/15 text-amber-300 border-amber-400/30",
-  Dairy: "bg-sky-400/15   text-sky-300   border-sky-400/30",
-  Seeds: "bg-emerald-400/15 text-emerald-300 border-emerald-400/30",
-  Rental: "bg-slate-400/15 text-slate-300  border-slate-400/30",
+  Crop: "bg-amber-50 text-amber-800 border-amber-200",
+  Dairy: "bg-sky-50 text-sky-800 border-sky-200",
+  Seeds: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Rental: "bg-slate-100 text-slate-700 border-slate-200",
 };
 function tagColor(category = "") {
   const c = category.toLowerCase();
@@ -84,16 +96,18 @@ function tagColor(category = "") {
 /* ─── Skeleton card ─── */
 function SkeletonCard() {
   return (
-    <div className="rounded-2xl border border-[#5C9E31]/12 overflow-hidden animate-pulse bg-[#5C9E31]/[0.03]">
-      <div className="h-52 bg-[#5C9E31]/8" />
+    <div
+      className={`${card} overflow-hidden animate-pulse motion-reduce:animate-none`}
+      aria-hidden="true"
+    >
+      <div className="h-48 bg-[#E9EDE6]" />
       <div className="p-5 space-y-3">
-        <div className="h-4 bg-[#5C9E31]/10 rounded-lg w-3/4" />
-        <div className="h-3 bg-white/5 rounded-lg w-1/2" />
-        <div className="h-3 bg-white/5 rounded-lg w-1/3" />
-        <div className="h-6 bg-[#5C9E31]/10 rounded-lg w-1/2 mt-4" />
+        <div className="h-4 bg-[#E9EDE6] rounded-lg w-3/4" />
+        <div className="h-3 bg-[#EEF1EB] rounded-lg w-1/2" />
+        <div className="h-6 bg-[#E9EDE6] rounded-lg w-1/3 mt-4" />
         <div className="flex gap-3 mt-5">
-          <div className="flex-1 h-9 bg-[#5C9E31]/8 rounded-xl" />
-          <div className="flex-1 h-9 bg-white/5 rounded-xl" />
+          <div className="flex-1 h-10 bg-[#EEF1EB] rounded-xl" />
+          <div className="flex-1 h-10 bg-[#EEF1EB] rounded-xl" />
         </div>
       </div>
     </div>
@@ -108,23 +122,25 @@ function Toast({ message, type = "success", onClose }) {
   }, [onClose]);
   return (
     <div
-      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-2xl shadow-2xl border
-      backdrop-blur-sm transition-all duration-300
+      role={type === "success" ? "status" : "alert"}
+      className={`fixed bottom-6 right-5 sm:right-8 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl border bg-white shadow-lg text-sm font-semibold animate-[slideUp_0.3s_ease-out] motion-reduce:animate-none
       ${
         type === "success"
-          ? "bg-[#1a2e10] border-[#5C9E31]/40 text-[#A8E063]"
-          : "bg-[#2e1010] border-red-500/30 text-red-400"
+          ? "border-[#2E7D32]/40 text-[#256628]"
+          : "border-red-200 text-red-700"
       }`}
     >
       {type === "success" ? (
-        <CheckCircle2 size={18} />
+        <CheckCircle2 size={18} aria-hidden="true" />
       ) : (
-        <AlertTriangle size={18} />
+        <AlertTriangle size={18} aria-hidden="true" />
       )}
-      <span className="text-sm font-medium">{message}</span>
+      <span>{message}</span>
       <button
+        type="button"
         onClick={onClose}
-        className="ml-2 opacity-60 hover:opacity-100 transition-opacity"
+        aria-label="Dismiss"
+        className={`ml-1 text-[#7A8576] hover:text-[#1F2A1C] transition-colors duration-200 rounded ${focusRing}`}
       >
         <X size={14} />
       </button>
@@ -134,32 +150,48 @@ function Toast({ message, type = "success", onClose }) {
 
 /* ─── Confirm dialog ─── */
 function ConfirmDialog({ title, body, onConfirm, onCancel }) {
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === "Escape") onCancel();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        aria-hidden="true"
+        className="absolute inset-0 bg-black/40"
         onClick={onCancel}
       />
-      <div className="relative bg-[#0e1a0f] border border-[#5C9E31]/15 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        className="relative bg-white border border-[#E4E8E1] rounded-2xl p-6 sm:p-7 max-w-sm w-full shadow-xl animate-[popIn_0.2s_ease-out] motion-reduce:animate-none"
+      >
         <div className="flex items-center gap-3 mb-4">
-          <span className="grid place-items-center w-10 h-10 rounded-2xl bg-red-500/10">
-            <Trash2 size={18} className="text-red-400" />
+          <span className="grid place-items-center w-11 h-11 rounded-xl bg-red-50 border border-red-200">
+            <Trash2 size={18} className="text-red-600" aria-hidden="true" />
           </span>
-          <h3 className="font-['Playfair_Display',serif] text-xl font-bold">
+          <h3 id="confirm-title" className="text-lg font-semibold">
             {title}
           </h3>
         </div>
-        <p className="text-sm text-white/50 leading-relaxed mb-8">{body}</p>
+        <p className="text-sm text-[#5B6559] leading-relaxed mb-6">{body}</p>
         <div className="flex gap-3">
           <button
+            type="button"
             onClick={onCancel}
-            className="flex-1 py-2.5 rounded-xl border border-white/10 text-sm text-white/60 hover:bg-white/6 transition-all"
+            className={`${btnOutline} flex-1`}
           >
             Cancel
           </button>
           <button
+            type="button"
             onClick={onConfirm}
-            className="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-sm font-semibold text-white transition-all active:scale-95"
+            className={`${btn} flex-1 bg-red-600 text-white hover:bg-red-700`}
           >
             Delete
           </button>
@@ -169,59 +201,75 @@ function ConfirmDialog({ title, body, onConfirm, onCancel }) {
   );
 }
 
+/* ─── price display ─── */
+function Price({ item, size = "lg" }) {
+  const cls = size === "lg" ? "text-2xl" : "text-xl";
+  return item.type === "sale" ? (
+    <p className={`${cls} font-bold text-[#1F2A1C]`}>₹{item.price}</p>
+  ) : (
+    <p className={`${cls} font-bold text-[#1F2A1C]`}>
+      ₹{item.rentPerDay}
+      <span className="text-sm font-normal text-[#5B6559]">/day</span>
+    </p>
+  );
+}
+
 /* ─── Listing Card ─── */
 function ListingCard({ item, onDelete, view }) {
   const [imgLoaded, setImgLoaded] = useState(false);
 
+  const imgProps = {
+    src: item.image,
+    alt: item.title,
+    loading: "lazy",
+    onLoad: () => setImgLoaded(true),
+    onError: (e) => {
+      e.currentTarget.style.display = "none";
+      setImgLoaded(true);
+    },
+  };
+
+  const deleteBtnHover =
+    "hover:bg-red-50 hover:border-red-200 hover:text-red-700";
+
   if (view === "list") {
     return (
       <div
-        className="group flex gap-5 rounded-2xl border border-[#5C9E31]/12 bg-[#5C9E31]/[0.03]
-        hover:border-[#5C9E31]/25 hover:bg-[#5C9E31]/[0.06] transition-all duration-300 overflow-hidden p-4"
+        className={`group flex flex-col sm:flex-row gap-4 sm:gap-5 ${card} hover:shadow-md transition-shadow duration-200 overflow-hidden p-4`}
       >
-        <div className="relative w-28 h-28 flex-shrink-0 rounded-xl overflow-hidden bg-white/6">
+        <div className="relative w-full h-40 sm:w-28 sm:h-28 shrink-0 rounded-xl overflow-hidden bg-[#EAF4E6]">
           {!imgLoaded && (
-            <div className="absolute inset-0 animate-pulse bg-white/8 rounded-xl" />
+            <div className="absolute inset-0 animate-pulse motion-reduce:animate-none bg-[#E9EDE6]" />
           )}
           <img
-            src={item.image}
-            alt={item.title}
-            onLoad={() => setImgLoaded(true)}
-            className={`w-full h-full object-cover transition-opacity duration-500 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            {...imgProps}
+            className={`w-full h-full object-cover transition-opacity duration-500 motion-reduce:transition-none ${imgLoaded ? "opacity-100" : "opacity-0"}`}
           />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-between">
           <div>
             <div className="flex items-start justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <span
-                  className={`inline-block text-[10px] font-['Space_Mono',monospace] tracking-widest uppercase
-                  px-2 py-0.5 rounded-full border mb-1.5 ${tagColor(item.category)}`}
+                  className={`inline-block text-xs font-medium px-2.5 py-0.5 rounded-full border mb-1.5 ${tagColor(item.category)}`}
                 >
                   {item.category}
                 </span>
-                <h3 className="font-['Playfair_Display',serif] font-bold text-lg leading-snug line-clamp-1">
+                <h3 className="font-semibold text-lg leading-snug truncate">
                   {item.title}
                 </h3>
               </div>
-              {item.type === "sale" ? (
-                <p className="text-[#A8E063] font-['Space_Mono',monospace] font-bold text-xl flex-shrink-0">
-                  ₹{item.price}
-                </p>
-              ) : (
-                <p className="text-sky-400 font-['Space_Mono',monospace] font-bold text-xl flex-shrink-0">
-                  ₹{item.rentPerDay}
-                  <span className="text-sm text-white/40">/day</span>
-                </p>
-              )}
+              <div className="shrink-0">
+                <Price item={item} size="md" />
+              </div>
             </div>
-            <div className="flex items-center gap-4 mt-1.5 text-xs text-white/40">
+            <div className="flex items-center gap-4 mt-1.5 text-[13px] text-[#5B6559]">
               <span className="flex items-center gap-1">
-                <MapPin size={11} />
+                <MapPin size={12} aria-hidden="true" />
                 {item.location}
               </span>
               <span className="flex items-center gap-1">
-                <Package size={11} />
+                <Package size={12} aria-hidden="true" />
                 {item.quantity} {item.quantityType}
               </span>
             </div>
@@ -229,19 +277,16 @@ function ListingCard({ item, onDelete, view }) {
           <div className="flex gap-2.5 mt-3">
             <Link
               to={`/edit-listing/${item._id}`}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/6 border border-white/10
-                hover:bg-[#5C9E31]/20 hover:border-[#5C9E31]/40 text-xs font-semibold text-white/70 hover:text-[#A8E063]
-                transition-all duration-200 active:scale-95"
+              className={`${actionBtn} px-4 hover:bg-[#EAF4E6] hover:border-[#2E7D32]/40 hover:text-[#256628]`}
             >
-              <Pencil size={12} /> Edit
+              <Pencil size={13} /> Edit
             </Link>
             <button
+              type="button"
               onClick={() => onDelete(item._id, item.title)}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white/6 border border-white/10
-                hover:bg-red-500/10 hover:border-red-500/30 text-xs font-semibold text-white/70 hover:text-red-400
-                transition-all duration-200 active:scale-95"
+              className={`${actionBtn} px-4 ${deleteBtnHover}`}
             >
-              <Trash2 size={12} /> Delete
+              <Trash2 size={13} /> Delete
             </button>
           </div>
         </div>
@@ -251,37 +296,30 @@ function ListingCard({ item, onDelete, view }) {
 
   return (
     <div
-      className="group rounded-2xl border border-[#5C9E31]/12 bg-[#5C9E31]/[0.03] overflow-hidden
-      hover:border-[#5C9E31]/28 hover:bg-[#5C9E31]/[0.06] transition-all duration-300"
+      className={`group h-full ${card} overflow-hidden hover:shadow-md transition-shadow duration-200`}
     >
       {/* image */}
-      <div className="relative h-52 overflow-hidden bg-white/6">
+      <div className="relative h-48 overflow-hidden bg-[#EAF4E6]">
         {!imgLoaded && (
-          <div className="absolute inset-0 animate-pulse bg-white/8" />
+          <div className="absolute inset-0 animate-pulse motion-reduce:animate-none bg-[#E9EDE6]" />
         )}
         <img
-          src={item.image}
-          alt={item.title}
-          onLoad={() => setImgLoaded(true)}
-          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-700
+          {...imgProps}
+          className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 motion-reduce:transition-none
             ${imgLoaded ? "opacity-100" : "opacity-0"}`}
         />
-        {/* gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
         {/* tag */}
         <span
-          className={`absolute top-3 left-3 text-[10px] font-['Space_Mono',monospace] tracking-widest uppercase
-          px-2.5 py-1 rounded-full border backdrop-blur-sm ${tagColor(item.category)}`}
+          className={`absolute top-3 left-3 text-xs font-medium px-2.5 py-1 rounded-full border ${tagColor(item.category)}`}
         >
           {item.category}
         </span>
         {/* type badge */}
         <span
-          className={`absolute top-3 right-3 text-[10px] font-['Space_Mono',monospace] tracking-wider uppercase
-          px-2.5 py-1 rounded-full ${
+          className={`absolute top-3 right-3 text-xs font-semibold px-2.5 py-1 rounded-full border ${
             item.type === "sale"
-              ? "bg-[#A8E063]/20 text-[#A8E063] border border-[#A8E063]/30"
-              : "bg-sky-400/20 text-sky-300 border border-sky-400/30"
+              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+              : "bg-sky-50 text-sky-800 border-sky-200"
           }`}
         >
           {item.type === "sale" ? "Sale" : "Rent"}
@@ -290,47 +328,35 @@ function ListingCard({ item, onDelete, view }) {
 
       {/* body */}
       <div className="p-5">
-        <h2 className="font-['Playfair_Display',serif] text-xl font-bold leading-snug line-clamp-1 mb-1">
+        <h2 className="text-lg font-semibold leading-snug truncate mb-1">
           {item.title}
         </h2>
-        <div className="flex items-center gap-3 text-xs text-white/40 mb-3">
+        <div className="flex items-center gap-3 text-[13px] text-[#5B6559] mb-3">
           <span className="flex items-center gap-1">
-            <MapPin size={11} />
+            <MapPin size={12} aria-hidden="true" />
             {item.location}
           </span>
           <span className="flex items-center gap-1">
-            <Package size={11} />
+            <Package size={12} aria-hidden="true" />
             {item.quantity} {item.quantityType}
           </span>
         </div>
 
-        {item.type === "sale" ? (
-          <p className="font-['Space_Mono',monospace] text-2xl font-bold text-[#A8E063]">
-            ₹{item.price}
-          </p>
-        ) : (
-          <p className="font-['Space_Mono',monospace] text-2xl font-bold text-sky-400">
-            ₹{item.rentPerDay}
-            <span className="text-sm text-white/40">/day</span>
-          </p>
-        )}
+        <Price item={item} />
 
         <div className="flex gap-3 mt-5">
           <Link
             to={`/edit-listing/${item._id}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl
-              bg-white/6 border border-white/10 hover:bg-[#5C9E31]/20 hover:border-[#5C9E31]/40
-              text-sm font-semibold text-white/70 hover:text-[#A8E063] transition-all duration-200 active:scale-95"
+            className={`${actionBtn} flex-1 hover:bg-[#EAF4E6] hover:border-[#2E7D32]/40 hover:text-[#256628]`}
           >
-            <Pencil size={13} /> Edit
+            <Pencil size={14} /> Edit
           </Link>
           <button
+            type="button"
             onClick={() => onDelete(item._id, item.title)}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl
-              bg-white/6 border border-white/10 hover:bg-red-500/10 hover:border-red-500/30
-              text-sm font-semibold text-white/70 hover:text-red-400 transition-all duration-200 active:scale-95"
+            className={`${actionBtn} flex-1 ${deleteBtnHover}`}
           >
-            <Trash2 size={13} /> Delete
+            <Trash2 size={14} /> Delete
           </button>
         </div>
       </div>
@@ -407,91 +433,46 @@ export default function MyListings() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0C110D] text-white font-['Inter',sans-serif] overflow-x-hidden">
-      {/* ── subtle green radial wash ── */}
-      <div
-        className="fixed inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 80% 55% at 50% 0%, rgba(92,158,49,0.07) 0%, transparent 70%)",
-        }}
-      />
-
-      {/* ── Noise texture ── */}
-      <div
-        className="fixed inset-0 pointer-events-none opacity-[0.03]
-        bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PGZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMSIvPjwvc3ZnPg==')]"
-      />
-
+    <div className="min-h-screen bg-[#F6F8F4] text-[#1F2A1C] font-['Inter',sans-serif] overflow-x-hidden">
       {/* ══════════════════════════════════════════
           PAGE HEADER
       ══════════════════════════════════════════ */}
-      <section className="relative pt-28 pb-14 px-5 sm:px-8 max-w-7xl mx-auto">
-        {/* decorative glows */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#5C9E31]/12 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-20 right-1/4 w-64 h-64 bg-[#5C9E31]/6 rounded-full blur-3xl pointer-events-none" />
-
-        <Reveal>
-          <p className="font-['Space_Mono',monospace] text-[11px] text-[#A8E063] tracking-[0.2em] uppercase mb-4">
-            Dashboard · My Listings
-          </p>
-        </Reveal>
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
-          <Reveal delay={80}>
-            <h1 className="font-['Playfair_Display',serif] text-5xl sm:text-6xl font-black leading-[1.05]">
-              Your
-              <br />
-              <span className="text-[#A8E063]">Harvest</span> Hub
+      <section className={`${container} pt-28 pb-8`}>
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5">
+          <Reveal>
+            <p className="text-sm font-semibold text-[#2E7D32] mb-1">
+              Seller dashboard
+            </p>
+            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+              Your Harvest Hub
             </h1>
+            <p className="text-[#5B6559] text-sm mt-2">
+              Manage everything you've listed for sale or rent.
+            </p>
           </Reveal>
 
-          <Reveal delay={160} from="right">
-            <Link
-              to="/add-listing"
-              className="group inline-flex items-center gap-2.5 px-6 py-3.5 rounded-2xl
-                bg-[#5C9E31] hover:bg-[#4E8A28] font-bold text-sm transition-all duration-200
-                active:scale-95 shadow-[0_0_30px_rgba(92,158,49,0.35)]"
-            >
-              <Plus
-                size={17}
-                className="group-hover:rotate-90 transition-transform duration-300"
-              />
+          <Reveal delay={100} from="right">
+            <Link to="/add-listing" className={`${btnPrimary} w-fit`}>
+              <Plus size={16} />
               Add New Listing
             </Link>
           </Reveal>
         </div>
 
         {/* ── stat chips ── */}
-        <Reveal delay={200}>
-          <div className="flex flex-wrap gap-3 mt-10">
+        <Reveal delay={150}>
+          <div className="flex flex-wrap gap-3 mt-8">
             {[
-              {
-                label: "Total",
-                value: stats.total,
-                color: "border-white/10 text-white/70",
-              },
-              {
-                label: "For Sale",
-                value: stats.sale,
-                color: "border-[#A8E063]/30 text-[#A8E063]",
-              },
-              {
-                label: "For Rent",
-                value: stats.rent,
-                color: "border-sky-400/30 text-sky-400",
-              },
-            ].map(({ label, value, color }) => (
+              { label: "Total", value: stats.total },
+              { label: "For sale", value: stats.sale },
+              { label: "For rent", value: stats.rent },
+            ].map(({ label, value }) => (
               <div
                 key={label}
-                className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full border
-                  bg-[#5C9E31]/[0.05] backdrop-blur-sm ${color}`}
+                className="flex items-center gap-2.5 px-5 h-11 rounded-full border border-[#E4E8E1] bg-white shadow-sm"
               >
-                <span className="font-['Space_Mono',monospace] font-bold text-lg">
-                  {value}
-                </span>
-                <span className="text-xs text-white/40 font-medium">
-                  {label}
-                </span>
+                <span className="font-bold text-lg">{value}</span>
+                <span className="text-sm text-[#5B6559]">{label}</span>
               </div>
             ))}
           </div>
@@ -500,21 +481,29 @@ export default function MyListings() {
 
       {/* ══════════════════════════════════════════
           FILTER + VIEW TOGGLE BAR
+          (sticks just below the 64px navbar)
       ══════════════════════════════════════════ */}
-      <div className="sticky top-0 z-30 bg-[#0C110D]/85 backdrop-blur-xl border-b border-[#5C9E31]/12 px-5 sm:px-8 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+      <div className="sticky top-16 z-30 bg-white border-y border-[#E4E8E1]">
+        <div
+          className={`${container} py-3 flex items-center justify-between gap-4`}
+        >
           {/* filter tabs */}
-          <div className="flex items-center gap-1">
+          <div
+            className="flex items-center gap-2"
+            role="group"
+            aria-label="Filter listings"
+          >
             {FILTERS.map((f) => (
               <button
                 key={f}
+                type="button"
+                aria-pressed={filter === f}
                 onClick={() => setFilter(f)}
-                className={`px-4 py-1.5 rounded-xl text-sm font-medium transition-all duration-200
-                  ${
-                    filter === f
-                      ? "bg-[#5C9E31]/20 text-[#A8E063] border border-[#5C9E31]/40"
-                      : "text-white/40 hover:text-white/70 hover:bg-white/6"
-                  }`}
+                className={`px-4 h-10 rounded-full text-sm font-medium transition-colors duration-200 ${focusRing} ${
+                  filter === f
+                    ? "bg-[#2E7D32] text-white"
+                    : "bg-white text-[#5B6559] border border-[#D5DBD0] hover:border-[#2E7D32] hover:text-[#2E7D32]"
+                }`}
               >
                 {f}
               </button>
@@ -522,18 +511,28 @@ export default function MyListings() {
           </div>
 
           {/* view toggle */}
-          <div className="flex items-center gap-1 bg-white/6 rounded-xl p-1">
+          <div
+            className="flex items-center gap-1 bg-[#F6F8F4] border border-[#E4E8E1] rounded-xl p-1"
+            role="group"
+            aria-label="Layout"
+          >
             <button
+              type="button"
+              aria-label="Grid view"
+              aria-pressed={view === "grid"}
               onClick={() => setView("grid")}
-              className={`p-2 rounded-lg transition-all ${view === "grid" ? "bg-white/12 text-white" : "text-white/30 hover:text-white/60"}`}
+              className={`grid place-items-center w-9 h-9 rounded-lg transition-colors duration-200 ${focusRing} ${view === "grid" ? "bg-white text-[#2E7D32] shadow-sm" : "text-[#7A8576] hover:text-[#1F2A1C]"}`}
             >
-              <LayoutGrid size={15} />
+              <LayoutGrid size={16} />
             </button>
             <button
+              type="button"
+              aria-label="List view"
+              aria-pressed={view === "list"}
               onClick={() => setView("list")}
-              className={`p-2 rounded-lg transition-all ${view === "list" ? "bg-white/12 text-white" : "text-white/30 hover:text-white/60"}`}
+              className={`grid place-items-center w-9 h-9 rounded-lg transition-colors duration-200 ${focusRing} ${view === "list" ? "bg-white text-[#2E7D32] shadow-sm" : "text-[#7A8576] hover:text-[#1F2A1C]"}`}
             >
-              <List size={15} />
+              <List size={16} />
             </button>
           </div>
         </div>
@@ -542,13 +541,15 @@ export default function MyListings() {
       {/* ══════════════════════════════════════════
           CONTENT
       ══════════════════════════════════════════ */}
-      <section className="max-w-7xl mx-auto px-5 sm:px-8 py-12">
+      <section className={`${container} py-10 pb-20`}>
         {/* SKELETON loading */}
         {loading && (
           <div
+            role="status"
+            aria-label="Loading listings"
             className={
               view === "grid"
-                ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
                 : "flex flex-col gap-4"
             }
           >
@@ -561,27 +562,24 @@ export default function MyListings() {
         {/* EMPTY STATE */}
         {!loading && visible.length === 0 && (
           <Reveal>
-            <div className="flex flex-col items-center justify-center py-28 text-center">
-              <div className="w-20 h-20 rounded-3xl bg-[#5C9E31]/8 border border-[#5C9E31]/20 grid place-items-center mb-6">
-                <ShoppingCart size={32} className="text-[#5C9E31]/50" />
-              </div>
-              <h2 className="font-['Playfair_Display',serif] text-3xl font-bold mb-3">
+            <div
+              className={`${card} flex flex-col items-center justify-center py-20 px-6 text-center`}
+            >
+              <span className="grid place-items-center w-16 h-16 rounded-2xl bg-[#EAF4E6] text-[#2E7D32] mb-5">
+                <ShoppingCart size={28} aria-hidden="true" />
+              </span>
+              <h2 className="text-xl font-bold mb-2">
                 {filter === "All"
                   ? "No listings yet"
                   : `No ${filter.toLowerCase()} listings`}
               </h2>
-              <p className="text-sm text-white/40 max-w-sm leading-relaxed mb-8">
+              <p className="text-sm text-[#5B6559] max-w-sm leading-relaxed mb-6">
                 {filter === "All"
                   ? "You haven't listed anything yet. Start by adding your first crop, dairy product, or tool."
                   : `You have no ${filter.toLowerCase()} listings. Try switching to a different filter.`}
               </p>
               {filter === "All" && (
-                <Link
-                  to="/add-listing"
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl
-                    bg-[#5C9E31] hover:bg-[#4E8A28] font-bold text-sm transition-all active:scale-95
-                    shadow-[0_0_20px_rgba(92,158,49,0.3)]"
-                >
+                <Link to="/add-listing" className={btnPrimary}>
                   <Plus size={15} /> Add Your First Listing
                 </Link>
               )}
@@ -594,12 +592,12 @@ export default function MyListings() {
           <div
             className={
               view === "grid"
-                ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                ? "grid sm:grid-cols-2 lg:grid-cols-3 gap-5"
                 : "flex flex-col gap-4"
             }
           >
             {visible.map((item, i) => (
-              <Reveal key={item._id} delay={i * 60}>
+              <Reveal key={item._id} delay={(i % 3) * 70}>
                 <ListingCard item={item} onDelete={requestDelete} view={view} />
               </Reveal>
             ))}
@@ -623,9 +621,14 @@ export default function MyListings() {
       )}
 
       <style>{`
-        @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
-        .scrollbar-hide::-webkit-scrollbar{display:none}
-        .scrollbar-hide{-ms-overflow-style:none;scrollbar-width:none}
+        @keyframes popIn {
+          from { transform:scale(0.95); opacity:0; }
+          to   { transform:scale(1);    opacity:1; }
+        }
+        @keyframes slideUp {
+          from { transform:translateY(12px); opacity:0; }
+          to   { transform:translateY(0);    opacity:1; }
+        }
       `}</style>
     </div>
   );
