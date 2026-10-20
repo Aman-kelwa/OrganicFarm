@@ -1,3 +1,10 @@
+/*
+  OrganicFarm – Notifications (Design System v2: light & simple)
+  Same tokens and patterns as the other app pages:
+  page #F6F8F4 · card #FFFFFF · soft green #EAF4E6 · border #E4E8E1 (strong #D5DBD0)
+  text #1F2A1C · muted #5B6559 · subtle #7A8576 · primary #2E7D32 (hover #256628)
+*/
+
 import { useEffect, useState, useRef } from "react";
 import {
   Bell,
@@ -17,6 +24,14 @@ import {
 } from "lucide-react";
 import socket from "../socket";
 import api from "../services/api";
+
+/* ── shared style primitives (same as other pages) ── */
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F8F4]";
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-5 h-11 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnOutline = `${btn} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+const btnSoft = `${btn} bg-[#EAF4E6] text-[#256628] hover:bg-[#DCEED6]`;
+const card = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
 
 /* ── reveal hook ── */
 function useReveal() {
@@ -45,7 +60,7 @@ function Reveal({ children, delay = 0, className = "" }) {
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-500 ease-out ${v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"} ${className}`}
+      className={`transition-all duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0 ${v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"} ${className}`}
     >
       {children}
     </div>
@@ -56,30 +71,30 @@ function Reveal({ children, delay = 0, className = "" }) {
 const TYPE_META = {
   order: {
     icon: ShoppingBag,
-    color: "text-amber-400",
-    bg: "bg-amber-400/10   border-amber-400/25",
-    dot: "bg-amber-400",
+    color: "text-amber-800",
+    bg: "bg-amber-50 border-amber-200",
+    dot: "bg-amber-500",
     label: "Order",
   },
   payment: {
     icon: CreditCard,
-    color: "text-[#A8E063]",
-    bg: "bg-[#5C9E31]/12  border-[#5C9E31]/30",
-    dot: "bg-[#A8E063]",
+    color: "text-emerald-800",
+    bg: "bg-emerald-50 border-emerald-200",
+    dot: "bg-emerald-600",
     label: "Payment",
   },
   review: {
     icon: Star,
-    color: "text-purple-400",
-    bg: "bg-purple-400/10  border-purple-400/25",
-    dot: "bg-purple-400",
+    color: "text-indigo-800",
+    bg: "bg-indigo-50 border-indigo-200",
+    dot: "bg-indigo-500",
     label: "Review",
   },
   system: {
     icon: Info,
-    color: "text-sky-400",
-    bg: "bg-sky-400/10     border-sky-400/25",
-    dot: "bg-sky-400",
+    color: "text-sky-800",
+    bg: "bg-sky-50 border-sky-200",
+    dot: "bg-sky-500",
     label: "System",
   },
 };
@@ -101,12 +116,15 @@ function timeAgo(dateStr) {
 /* ── skeleton ── */
 function Skeleton() {
   return (
-    <div className="flex gap-4 p-5 rounded-2xl bg-white/4 border border-white/8 animate-pulse">
-      <div className="w-11 h-11 rounded-2xl bg-white/8 shrink-0" />
+    <div
+      className={`flex gap-4 p-5 ${card} animate-pulse motion-reduce:animate-none`}
+      aria-hidden="true"
+    >
+      <div className="w-11 h-11 rounded-xl bg-[#E9EDE6] shrink-0" />
       <div className="flex-1 space-y-2 pt-1">
-        <div className="h-3.5 bg-white/10 rounded-full w-3/4" />
-        <div className="h-3   bg-white/7  rounded-full w-1/2" />
-        <div className="h-3   bg-white/7  rounded-full w-1/3" />
+        <div className="h-3.5 bg-[#E9EDE6] rounded-full w-3/4" />
+        <div className="h-3 bg-[#EEF1EB] rounded-full w-1/2" />
+        <div className="h-3 bg-[#EEF1EB] rounded-full w-1/3" />
       </div>
     </div>
   );
@@ -161,6 +179,16 @@ export default function Notifications() {
       socket.off("new-review", handler);
     };
   }, []);
+
+  /* ── close delete modal with Escape ── */
+  useEffect(() => {
+    if (!deleteTarget) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") setDelete(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [deleteTarget]);
 
   /* ── mark one as read ── */
   const markAsRead = async (id) => {
@@ -248,18 +276,19 @@ export default function Notifications() {
 
   /* ════════════════════════ RENDER ════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#0B0F0A] text-white font-['Inter',sans-serif]">
+    <div className="min-h-screen bg-[#F6F8F4] text-[#1F2A1C] font-['Inter',sans-serif]">
       {/* ── toast ── */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl border text-sm font-semibold shadow-2xl animate-[slideRight_0.3s_ease-out] ${
+          role={toast.ok ? "status" : "alert"}
+          className={`fixed top-20 right-5 sm:right-8 z-50 flex items-center gap-3 px-5 py-3.5 rounded-xl border bg-white text-sm font-semibold shadow-lg animate-[slideRight_0.3s_ease-out] motion-reduce:animate-none ${
             toast.ok
-              ? "bg-[#0E140D] border-[#5C9E31]/40 text-[#A8E063]"
-              : "bg-[#140e0e] border-red-500/40   text-red-400"
+              ? "border-[#2E7D32]/40 text-[#256628]"
+              : "border-red-200 text-red-700"
           }`}
         >
           <span
-            className={`w-2 h-2 rounded-full ${toast.ok ? "bg-[#A8E063]" : "bg-red-400"}`}
+            className={`w-2 h-2 rounded-full ${toast.ok ? "bg-[#2E7D32]" : "bg-red-500"}`}
           />
           {toast.msg}
         </div>
@@ -269,36 +298,48 @@ export default function Notifications() {
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            aria-hidden="true"
+            className="absolute inset-0 bg-black/40"
             onClick={() => setDelete(null)}
           />
-          <div className="relative w-full max-w-md bg-[#0E140D] border border-white/10 rounded-3xl p-7 shadow-[0_30px_80px_rgba(0,0,0,0.8)] animate-[popIn_0.25s_cubic-bezier(0.34,1.56,0.64,1)]">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-notif-title"
+            className="relative w-full max-w-md bg-white border border-[#E4E8E1] rounded-2xl p-6 sm:p-7 shadow-xl animate-[popIn_0.2s_ease-out] motion-reduce:animate-none"
+          >
             <div className="flex items-center gap-4 mb-5">
-              <span className="grid place-items-center w-12 h-12 rounded-2xl bg-red-500/12 border border-red-500/25 shrink-0">
-                <AlertTriangle size={22} className="text-red-400" />
+              <span className="grid place-items-center w-12 h-12 rounded-xl bg-red-50 border border-red-200 shrink-0">
+                <AlertTriangle
+                  size={22}
+                  className="text-red-600"
+                  aria-hidden="true"
+                />
               </span>
               <div>
-                <h3 className="font-['Playfair_Display',serif] text-lg font-bold">
+                <h3 id="delete-notif-title" className="text-lg font-semibold">
                   Delete notification?
                 </h3>
-                <p className="text-sm text-white/40 mt-0.5">
+                <p className="text-sm text-[#5B6559] mt-0.5">
                   This cannot be undone.
                 </p>
               </div>
             </div>
-            <p className="text-sm text-white/55 bg-white/4 border border-white/8 rounded-xl px-4 py-3 mb-6 line-clamp-2">
+            <p className="text-sm text-[#5B6559] bg-[#F6F8F4] border border-[#E4E8E1] rounded-xl px-4 py-3 mb-6 line-clamp-2">
               "{deleteTarget.message}"
             </p>
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setDelete(null)}
-                className="flex-1 py-3 rounded-xl border border-white/12 text-white/60 hover:bg-white/6 font-semibold text-sm transition-all active:scale-95"
+                className={`${btnOutline} flex-1`}
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={deleteNotification}
-                className="flex-1 py-3 rounded-xl bg-red-500/90 hover:bg-red-500 text-white font-semibold text-sm transition-all active:scale-95 shadow-[0_0_20px_rgba(239,68,68,0.3)]"
+                className={`${btn} flex-1 bg-red-600 text-white hover:bg-red-700`}
               >
                 Yes, delete
               </button>
@@ -310,45 +351,50 @@ export default function Notifications() {
       <div className="max-w-3xl mx-auto px-5 sm:px-8 pt-28 pb-20">
         {/* ── HEADER ── */}
         <Reveal>
-          <div className="flex items-start justify-between gap-4 mb-10">
+          <div className="flex items-start justify-between gap-4 mb-8">
             <div>
-              <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-2">
+              <p className="text-sm font-semibold text-[#2E7D32] mb-1">
                 Activity
               </p>
-              <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold flex items-center gap-4">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight flex items-center gap-3">
                 Notifications
                 {/* live ping icon */}
                 <span
-                  className={`relative inline-flex transition-transform duration-300 ${newPing ? "scale-125" : "scale-100"}`}
+                  className={`relative inline-flex transition-transform duration-300 motion-reduce:transition-none ${newPing ? "scale-125" : "scale-100"}`}
                 >
                   <Bell
-                    size={32}
-                    className={`transition-colors duration-300 ${newPing ? "text-[#A8E063]" : "text-white/20"}`}
+                    size={28}
+                    aria-hidden="true"
+                    className={`transition-colors duration-300 ${newPing ? "text-[#2E7D32]" : "text-[#7A8576]"}`}
                   />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full bg-[#5C9E31] text-[10px] font-bold text-white shadow-[0_0_12px_rgba(92,158,49,0.7)] animate-[popIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)]">
+                    <span className="absolute -top-1.5 -right-2 min-w-[20px] h-5 px-1 flex items-center justify-center rounded-full bg-[#2E7D32] border-2 border-[#F6F8F4] text-[10px] font-bold text-white animate-[popIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:animate-none">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </span>
               </h1>
               {!loading && (
-                <p className="mt-2 text-sm text-white/40">
+                <p className="mt-2 text-sm text-[#5B6559]" aria-live="polite">
                   {unreadCount > 0
                     ? `${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
-                    : "You're all caught up 🌱"}
+                    : "You're all caught up"}
                 </p>
               )}
             </div>
 
             {unreadCount > 0 && (
               <button
+                type="button"
                 onClick={markAllAsRead}
                 disabled={markingAll}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#5C9E31]/12 border border-[#5C9E31]/25 text-[#A8E063] text-sm font-semibold hover:bg-[#5C9E31]/22 transition-all active:scale-95 disabled:opacity-50 shrink-0 mt-8"
+                className={`${btnSoft} shrink-0 mt-6 disabled:opacity-60`}
               >
                 {markingAll ? (
-                  <Loader2 size={15} className="animate-spin" />
+                  <Loader2
+                    size={15}
+                    className="animate-spin motion-reduce:animate-none"
+                  />
                 ) : (
                   <CheckCheck size={15} />
                 )}
@@ -360,7 +406,11 @@ export default function Notifications() {
 
         {/* ── FILTER TABS ── */}
         <Reveal delay={80}>
-          <div className="flex gap-2 overflow-x-auto pb-1 mb-8 scrollbar-hide">
+          <div
+            className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide"
+            role="group"
+            aria-label="Filter notifications"
+          >
             {FILTERS.map((f) => {
               const count =
                 f === "All"
@@ -373,14 +423,16 @@ export default function Notifications() {
               return (
                 <button
                   key={f}
+                  type="button"
+                  aria-pressed={isActive}
                   onClick={() => setFilter(f)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-1.5 px-4 h-10 rounded-full text-sm font-medium whitespace-nowrap transition-colors duration-200 ${focusRing} ${
                     isActive
-                      ? "bg-[#5C9E31] text-white shadow-[0_0_16px_rgba(92,158,49,0.4)]"
-                      : "bg-white/5 text-white/50 border border-white/8 hover:bg-white/10 hover:text-white"
+                      ? "bg-[#2E7D32] text-white"
+                      : "bg-white text-[#5B6559] border border-[#D5DBD0] hover:border-[#2E7D32] hover:text-[#2E7D32]"
                   }`}
                 >
-                  {meta && <meta.icon size={13} />}
+                  {meta && <meta.icon size={13} aria-hidden="true" />}
                   {f === "All"
                     ? "All"
                     : f === "Unread"
@@ -388,10 +440,10 @@ export default function Notifications() {
                       : (meta?.label ?? f)}
                   {count > 0 && (
                     <span
-                      className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                      className={`text-[11px] px-1.5 py-0.5 rounded-full ${
                         isActive
-                          ? "bg-white/20 text-white"
-                          : "bg-white/8 text-white/40"
+                          ? "bg-white/25 text-white"
+                          : "bg-[#F6F8F4] text-[#5B6559]"
                       }`}
                     >
                       {count}
@@ -405,7 +457,11 @@ export default function Notifications() {
 
         {/* ── LOADING ── */}
         {loading && (
-          <div className="space-y-3">
+          <div
+            className="space-y-3"
+            role="status"
+            aria-label="Loading notifications"
+          >
             {Array(5)
               .fill(0)
               .map((_, i) => (
@@ -417,14 +473,14 @@ export default function Notifications() {
         {/* ── EMPTY STATE ── */}
         {!loading && notifications.length === 0 && (
           <Reveal>
-            <div className="flex flex-col items-center justify-center py-28 text-center">
-              <span className="relative grid place-items-center w-24 h-24 rounded-3xl bg-white/4 border border-white/8 mb-6">
-                <BellOff size={40} className="text-white/15" />
+            <div
+              className={`${card} flex flex-col items-center justify-center py-20 px-6 text-center`}
+            >
+              <span className="grid place-items-center w-16 h-16 rounded-2xl bg-[#EAF4E6] text-[#2E7D32] mb-5">
+                <BellOff size={28} aria-hidden="true" />
               </span>
-              <h2 className="font-['Playfair_Display',serif] text-2xl font-bold mb-2">
-                All quiet out here
-              </h2>
-              <p className="text-white/40 max-w-xs text-sm leading-relaxed">
+              <h2 className="text-xl font-bold mb-2">All quiet out here</h2>
+              <p className="text-[#5B6559] max-w-xs text-sm leading-relaxed">
                 Order updates, payment confirmations and review alerts will show
                 up here in real time.
               </p>
@@ -435,14 +491,19 @@ export default function Notifications() {
         {/* ── NO FILTERED RESULTS ── */}
         {!loading && notifications.length > 0 && visible.length === 0 && (
           <Reveal>
-            <div className="flex flex-col items-center py-16 text-center">
-              <Filter size={36} className="text-white/15 mb-4" />
+            <div
+              className={`${card} flex flex-col items-center py-16 px-6 text-center`}
+            >
+              <span className="grid place-items-center w-14 h-14 rounded-2xl bg-[#F6F8F4] text-[#7A8576] mb-4">
+                <Filter size={24} aria-hidden="true" />
+              </span>
               <p className="font-semibold mb-1">
                 No {filter.toLowerCase()} notifications
               </p>
               <button
+                type="button"
                 onClick={() => setFilter("All")}
-                className="mt-4 px-4 py-2 text-sm rounded-xl border border-white/12 hover:bg-white/6 transition-all"
+                className={`${btnOutline} mt-5`}
               >
                 View all
               </button>
@@ -460,57 +521,64 @@ export default function Notifications() {
               const isBeingMarked = marking === n._id;
 
               return (
-                <Reveal key={n._id} delay={i * 45}>
+                <Reveal key={n._id} delay={Math.min(i, 5) * 45}>
                   <div
-                    className={`group relative flex gap-4 p-5 rounded-2xl border transition-all duration-300 ${
+                    className={`group relative flex gap-4 p-5 rounded-2xl border transition-colors duration-200 ${
                       isNew
-                        ? "bg-white/6 border-white/14 hover:border-white/22 hover:bg-white/8"
-                        : "bg-white/3 border-white/6  hover:border-white/12 hover:bg-white/5"
+                        ? "bg-white border-[#D5DBD0] shadow-sm hover:border-[#2E7D32]/40"
+                        : "bg-white/70 border-[#E4E8E1] hover:bg-white"
                     }`}
                   >
                     {/* unread left bar */}
                     {isNew && (
-                      <div className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-[#5C9E31]" />
+                      <div
+                        aria-hidden="true"
+                        className="absolute left-0 top-4 bottom-4 w-[3px] rounded-full bg-[#2E7D32]"
+                      />
                     )}
 
                     {/* icon */}
                     <span
-                      className={`grid place-items-center w-11 h-11 rounded-2xl border shrink-0 transition-transform duration-300 group-hover:scale-110 ${meta.bg}`}
+                      className={`grid place-items-center w-11 h-11 rounded-xl border shrink-0 ${meta.bg} ${meta.color}`}
                     >
-                      <Icon size={19} className={meta.color} />
+                      <Icon size={19} aria-hidden="true" />
                     </span>
 
                     {/* content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <p
-                          className={`text-sm leading-relaxed ${isNew ? "text-white font-medium" : "text-white/65"}`}
+                          className={`text-sm leading-relaxed ${isNew ? "text-[#1F2A1C] font-medium" : "text-[#5B6559]"}`}
                         >
                           {n.message}
                         </p>
                         {/* type badge on right */}
                         <span
-                          className={`shrink-0 text-[10px] font-['Space_Mono',monospace] uppercase tracking-wider px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}
+                          className={`shrink-0 text-xs font-medium px-2.5 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}
                         >
                           {meta.label}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between mt-3">
-                        <p className="flex items-center gap-1.5 text-xs text-white/35">
-                          <Clock size={11} />
+                      <div className="flex items-center justify-between gap-3 mt-3">
+                        <p className="flex items-center gap-1.5 text-xs text-[#5B6559]">
+                          <Clock size={12} aria-hidden="true" />
                           {timeAgo(n.createdAt)}
                         </p>
 
                         <div className="flex items-center gap-2">
                           {isNew && (
                             <button
+                              type="button"
                               onClick={() => markAsRead(n._id)}
                               disabled={isBeingMarked}
-                              className="flex items-center gap-1.5 text-xs font-semibold text-[#A8E063] hover:text-white border border-[#5C9E31]/30 hover:border-white/25 hover:bg-white/6 px-3 py-1.5 rounded-full transition-all active:scale-95 disabled:opacity-50"
+                              className={`flex items-center gap-1.5 text-xs font-semibold text-[#256628] bg-[#EAF4E6] hover:bg-[#DCEED6] px-3 h-8 rounded-full transition-colors duration-200 active:scale-[0.98] disabled:opacity-60 ${focusRing}`}
                             >
                               {isBeingMarked ? (
-                                <Loader2 size={11} className="animate-spin" />
+                                <Loader2
+                                  size={11}
+                                  className="animate-spin motion-reduce:animate-none"
+                                />
                               ) : (
                                 <Check size={11} />
                               )}
@@ -519,20 +587,22 @@ export default function Notifications() {
                           )}
 
                           {!isNew && (
-                            <span className="flex items-center gap-1 text-xs text-white/25">
-                              <Check size={11} /> Read
+                            <span className="flex items-center gap-1 text-xs text-[#7A8576]">
+                              <Check size={11} aria-hidden="true" /> Read
                             </span>
                           )}
 
                           {/* delete button — always visible */}
                           <button
+                            type="button"
                             onClick={() =>
                               setDelete({ id: n._id, message: n.message })
                             }
-                            className="grid place-items-center w-7 h-7 rounded-lg text-white/25 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all active:scale-95"
+                            aria-label="Delete notification"
                             title="Delete notification"
+                            className={`grid place-items-center w-8 h-8 rounded-lg text-[#7A8576] hover:text-red-600 hover:bg-red-50 transition-colors duration-200 active:scale-[0.98] ${focusRing}`}
                           >
-                            <Trash2 size={13} />
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </div>
@@ -547,11 +617,11 @@ export default function Notifications() {
 
       <style>{`
         @keyframes popIn {
-          from { transform:scale(0); opacity:0; }
-          to   { transform:scale(1); opacity:1; }
+          from { transform:scale(0.9); opacity:0; }
+          to   { transform:scale(1);   opacity:1; }
         }
         @keyframes slideRight {
-          from { transform:translateX(40px); opacity:0; }
+          from { transform:translateX(24px); opacity:0; }
           to   { transform:translateX(0);    opacity:1; }
         }
         .scrollbar-hide::-webkit-scrollbar { display:none; }
