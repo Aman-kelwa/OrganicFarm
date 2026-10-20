@@ -12,20 +12,35 @@ import {
 } from "lucide-react";
 import api from "../services/api";
 
-/* ── category tag colors ── */
+/* ════════════════════════════════════════════════════
+   SHARED STYLE CONSTANTS
+   (same names as in Listings.jsx — move both copies into
+   one shared file, e.g. src/styles/ui.js, and import them)
+   ════════════════════════════════════════════════════ */
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2";
+const CARD =
+  "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm hover:shadow-md transition-shadow duration-200";
+const BTN_SM = `inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors duration-200 ${FOCUS}`;
+const BTN_OUTLINE_SM = `${BTN_SM} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+const ICON_CHIP = `grid place-items-center h-10 w-10 shrink-0 rounded-xl bg-[#EAF4E6] text-[#2E7D32] transition-colors duration-200 hover:bg-[#2E7D32] hover:text-white disabled:cursor-not-allowed ${FOCUS}`;
+const TAG_BASE =
+  "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold";
+
+/* ── category tag colors (design-system tag badges only) ── */
 const CAT_COLOR = {
-  Crops: "text-amber-400   bg-amber-400/12   border-amber-400/25",
-  Vegetables: "text-emerald-400 bg-emerald-400/12 border-emerald-400/25",
-  Fruits: "text-rose-400    bg-rose-400/12    border-rose-400/25",
-  Seeds: "text-lime-400    bg-lime-400/12    border-lime-400/25",
-  Dairy: "text-sky-400     bg-sky-400/12     border-sky-400/25",
-  Pulses: "text-orange-400  bg-orange-400/12  border-orange-400/25",
-  Spices: "text-red-400     bg-red-400/12     border-red-400/25",
-  Fertilizers: "text-violet-400  bg-violet-400/12  border-violet-400/25",
-  Tractor: "text-slate-400   bg-slate-400/12   border-slate-400/25",
+  Crops: "bg-amber-50 text-amber-800 border-amber-200",
+  Vegetables: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Fruits: "bg-amber-50 text-amber-800 border-amber-200",
+  Seeds: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  Dairy: "bg-sky-50 text-sky-800 border-sky-200",
+  Pulses: "bg-amber-50 text-amber-800 border-amber-200",
+  Spices: "bg-amber-50 text-amber-800 border-amber-200",
+  Fertilizers: "bg-slate-100 text-slate-700 border-slate-200",
+  Tractor: "bg-slate-100 text-slate-700 border-slate-200",
 };
 const getCatColor = (cat) =>
-  CAT_COLOR[cat] ?? "text-white/50 bg-white/8 border-white/12";
+  CAT_COLOR[cat] ?? "bg-slate-100 text-slate-700 border-slate-200";
 
 /* ════════════════════════════════════════════════ */
 export default function ListingCard({ item, viewMode = "grid" }) {
@@ -70,24 +85,58 @@ export default function ListingCard({ item, viewMode = "grid" }) {
 
   const isSale = item.type === "sale";
   const catColor = getCatColor(item.category);
+  const priceText = isSale ? `₹${item.price}` : `₹${item.rentPerDay}`;
+  const unitText = isSale ? `/${item.quantityType}` : "/day";
+
+  /* soft-green cart button, shared by both views */
+  const cartButton = (
+    <button
+      type="button"
+      onClick={handleAddToCart}
+      disabled={adding || added}
+      aria-label={
+        added
+          ? "Added to cart"
+          : adding
+            ? "Adding to cart"
+            : `Add ${item.title} to cart`
+      }
+      className={`${ICON_CHIP} ${
+        added ? "bg-[#2E7D32] text-white" : ""
+      } ${adding ? "cursor-wait opacity-70" : ""}`}
+    >
+      {added ? (
+        <CheckCircle2 size={18} aria-hidden="true" />
+      ) : adding ? (
+        <span
+          aria-hidden="true"
+          className="h-4 w-4 rounded-full border-2 border-[#2E7D32]/30 border-t-[#2E7D32] animate-spin motion-reduce:animate-none"
+        />
+      ) : (
+        <ShoppingCart size={18} aria-hidden="true" />
+      )}
+    </button>
+  );
+
+  const showCart = user?.role === "buyer" && isSale && item.available;
 
   /* ── LIST VIEW ── */
   if (viewMode === "list") {
     return (
-      <div className="group flex items-center gap-5 rounded-2xl bg-white/4 border border-white/8 hover:border-white/16 hover:bg-white/6 p-4 transition-all duration-200">
+      <div className={`group flex items-center gap-4 sm:gap-5 p-4 ${CARD}`}>
         {/* thumb */}
-        <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-white/6 shrink-0">
+        <div className="relative h-24 w-24 sm:w-32 shrink-0 overflow-hidden rounded-xl bg-[#F6F8F4]">
           <img
             src={item.image}
             alt={item.title}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
             onError={(e) => {
               e.currentTarget.style.display = "none";
             }}
           />
           {!item.available && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-              <span className="text-[9px] font-bold text-red-400 uppercase tracking-wider">
+            <div className="absolute inset-0 grid place-items-center bg-white/75">
+              <span className="text-xs font-semibold text-[#5B6559]">
                 Unavailable
               </span>
             </div>
@@ -95,225 +144,201 @@ export default function ListingCard({ item, viewMode = "grid" }) {
         </div>
 
         {/* info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={`text-[10px] font-['Space_Mono',monospace] uppercase tracking-wider px-2 py-0.5 rounded-full border ${catColor}`}
-            >
-              {item.category}
-            </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`${TAG_BASE} ${catColor}`}>{item.category}</span>
             {item.available ? (
-              <span className="text-[10px] text-[#A8E063] bg-[#5C9E31]/12 border border-[#5C9E31]/25 px-2 py-0.5 rounded-full">
+              <span
+                className={`${TAG_BASE} bg-emerald-50 text-emerald-800 border-emerald-200`}
+              >
                 Available
               </span>
             ) : (
-              <span className="text-[10px] text-red-400  bg-red-400/10    border border-red-400/25    px-2 py-0.5 rounded-full">
+              <span
+                className={`${TAG_BASE} bg-slate-100 text-slate-700 border-slate-200`}
+              >
                 Unavailable
               </span>
             )}
           </div>
-          <h3 className="font-['Playfair_Display',serif] font-bold text-base mt-1.5 truncate">
+          <h3 className="mt-2 truncate text-lg font-semibold text-[#1F2A1C]">
             {item.title}
           </h3>
-          <p className="flex items-center gap-1 text-xs text-white/40 mt-1">
-            <MapPin size={11} /> {item.location}
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-[#5B6559]">
+            <MapPin size={14} aria-hidden="true" className="shrink-0" />
+            <span className="truncate">{item.location}</span>
+          </p>
+          {/* price on small screens */}
+          <p className="mt-1.5 text-base font-bold text-[#1F2A1C] sm:hidden">
+            {priceText}
+            <span className="text-sm font-normal text-[#5B6559]">
+              {unitText}
+            </span>
           </p>
         </div>
 
         {/* price + stock */}
-        <div className="shrink-0 text-right hidden sm:block">
-          <p
-            className={`font-bold text-lg ${isSale ? "text-[#A8E063]" : "text-sky-400"}`}
-          >
-            {isSale ? `₹${item.price}` : `₹${item.rentPerDay}`}
-            <span className="text-xs text-white/35 font-normal">
-              {isSale ? `/${item.quantityType}` : "/day"}
+        <div className="hidden shrink-0 text-right sm:block">
+          <p className="text-xl font-bold text-[#1F2A1C]">
+            {priceText}
+            <span className="text-sm font-normal text-[#5B6559]">
+              {unitText}
             </span>
           </p>
-          <p className="text-xs text-white/35 mt-0.5">
+          <p className="mt-0.5 text-sm text-[#5B6559]">
             Stock: {item.quantity} {item.quantityType}
           </p>
         </div>
 
         {/* actions */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
+          {showCart && cartButton}
           <Link
             to={`/listings/${item._id}`}
-            className="grid place-items-center w-9 h-9 rounded-xl bg-[#5C9E31]/15 hover:bg-[#5C9E31]/30 text-[#A8E063] border border-[#5C9E31]/25 transition-all active:scale-95"
+            aria-label={`View details for ${item.title}`}
+            className={BTN_OUTLINE_SM}
           >
-            <ArrowRight size={16} />
+            <span className="hidden sm:inline">Details</span>
+            <ArrowRight size={14} aria-hidden="true" />
           </Link>
-          {user?.role === "buyer" && isSale && item.available && (
-            <button
-              onClick={handleAddToCart}
-              disabled={adding || added}
-              className={`grid place-items-center w-9 h-9 rounded-xl border transition-all active:scale-95 ${
-                added
-                  ? "bg-[#5C9E31]/25 border-[#5C9E31]/40 text-[#A8E063]"
-                  : "bg-white/6 border-white/10 text-white/55 hover:bg-white/12 hover:text-white"
-              }`}
-            >
-              {added ? <CheckCircle2 size={16} /> : <ShoppingCart size={16} />}
-            </button>
-          )}
         </div>
+
+        <span role="status" className="sr-only">
+          {added ? "Added to cart" : ""}
+        </span>
       </div>
     );
   }
 
   /* ── GRID VIEW (default) ── */
   return (
-    <div className="group relative rounded-2xl bg-white/4 border border-white/8 hover:border-white/18 overflow-hidden hover:-translate-y-1.5 hover:shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all duration-300">
+    <div
+      className={`group relative flex h-full flex-col overflow-hidden ${CARD}`}
+    >
       {/* image */}
-      <div className="relative h-52 overflow-hidden bg-white/6">
+      <div className="relative h-48 shrink-0 overflow-hidden bg-[#F6F8F4]">
         <img
           src={item.image}
           alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105 motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           onError={(e) => {
             e.currentTarget.style.display = "none";
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-transparent" />
-
-        {/* top left: category */}
-        <span
-          className={`absolute top-3 left-3 text-[10px] font-['Space_Mono',monospace] uppercase tracking-wider px-2.5 py-1 rounded-full border backdrop-blur-sm ${catColor}`}
-        >
-          {item.category}
-        </span>
-
-        {/* top right: type tag */}
-        <span
-          className={`absolute top-3 right-3 text-[10px] font-semibold px-2.5 py-1 rounded-full border backdrop-blur-sm ${
-            isSale
-              ? "bg-amber-400/15 text-amber-300 border-amber-400/30"
-              : "bg-sky-400/15   text-sky-300   border-sky-400/30"
-          }`}
-        >
-          {isSale ? "Sale" : "Rent"}
-        </span>
 
         {/* unavailable overlay */}
         {!item.available && (
-          <div className="absolute inset-0 bg-black/55 flex items-center justify-center">
-            <span className="font-semibold text-red-400 text-sm bg-black/60 backdrop-blur-sm px-4 py-2 rounded-full border border-red-400/30">
-              Currently Unavailable
+          <div className="absolute inset-0 grid place-items-center bg-white/70">
+            <span className="rounded-full border border-[#D5DBD0] bg-white px-4 py-2 text-sm font-semibold text-[#5B6559]">
+              Currently unavailable
             </span>
           </div>
         )}
 
-        {/* bottom: price */}
-        <div className="absolute bottom-3 left-4">
-          <p
-            className={`font-['Playfair_Display',serif] text-2xl font-bold drop-shadow-lg ${isSale ? "text-[#A8E063]" : "text-sky-300"}`}
-          >
-            {isSale ? `₹${item.price}` : `₹${item.rentPerDay}`}
-            <span className="text-sm font-normal text-white/60 ml-1">
-              {isSale ? `/${item.quantityType}` : "/day"}
-            </span>
-          </p>
-        </div>
+        {/* top left: category */}
+        <span className={`absolute left-3 top-3 ${TAG_BASE} ${catColor}`}>
+          {item.category}
+        </span>
+
+        {/* top right: type */}
+        <span className="absolute right-3 top-3 inline-flex items-center rounded-full border border-[#E4E8E1] bg-white px-2.5 py-1 text-xs font-semibold text-[#1F2A1C] shadow-sm">
+          {isSale ? "Sale" : "Rent"}
+        </span>
       </div>
 
       {/* body */}
-      <div className="p-5">
-        <h2 className="font-['Playfair_Display',serif] text-lg font-bold leading-snug line-clamp-1">
+      <div className="flex flex-1 flex-col p-5">
+        <h2 className="line-clamp-1 text-lg font-semibold leading-snug text-[#1F2A1C]">
           {item.title}
         </h2>
 
-        <div className="flex items-center justify-between mt-2">
-          <p className="flex items-center gap-1 text-xs text-white/40">
-            <MapPin size={11} /> {item.location}
-          </p>
-          <p className="flex items-center gap-1 text-xs text-white/35">
-            <Package size={11} /> {item.quantity} {item.quantityType}
-          </p>
-        </div>
+        <p className="mt-2 flex items-center gap-1.5 text-sm text-[#5B6559]">
+          <MapPin size={14} aria-hidden="true" className="shrink-0" />
+          <span className="truncate">{item.location}</span>
+        </p>
+        <p className="mt-1 flex items-center gap-1.5 text-sm text-[#5B6559]">
+          <Package size={14} aria-hidden="true" className="shrink-0" />
+          {item.quantity} {item.quantityType}
+        </p>
 
         {/* availability */}
-        <div
-          className={`flex items-center gap-1.5 mt-3 text-xs font-semibold ${item.available ? "text-[#A8E063]" : "text-red-400"}`}
+        <p
+          className={`mt-3 flex items-center gap-1.5 text-sm font-semibold ${
+            item.available ? "text-[#2E7D32]" : "text-[#7A8576]"
+          }`}
         >
           {item.available ? (
             <>
-              <CheckCircle2 size={13} /> Available
+              <CheckCircle2 size={14} aria-hidden="true" /> Available
             </>
           ) : (
             <>
-              <XCircle size={13} /> Unavailable
+              <XCircle size={14} aria-hidden="true" /> Unavailable
             </>
           )}
-        </div>
+        </p>
 
-        {/* toast-style error */}
+        {/* error message */}
         {errMsg && (
-          <p className="mt-2 text-xs text-red-400 bg-red-400/8 border border-red-400/20 px-3 py-2 rounded-lg">
+          <p
+            role="alert"
+            className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800"
+          >
             {errMsg}
           </p>
         )}
 
-        {/* actions */}
-        <div className="flex gap-2.5 mt-5">
-          <Link
-            to={`/listings/${item._id}`}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-[#5C9E31]/15 hover:bg-[#5C9E31]/28 text-[#A8E063] border border-[#5C9E31]/30 hover:border-[#5C9E31]/55 text-sm font-semibold transition-all active:scale-95"
-          >
-            View Details <ArrowRight size={14} />
-          </Link>
+        {/* price + actions */}
+        <div className="mt-auto flex items-center justify-between gap-3 pt-5">
+          <p className="text-xl font-bold text-[#1F2A1C]">
+            {priceText}
+            <span className="text-sm font-normal text-[#5B6559]">
+              {unitText}
+            </span>
+          </p>
 
-          {user?.role === "buyer" && (
-            <>
-              {isSale && item.available && (
-                <button
-                  onClick={handleAddToCart}
-                  disabled={adding || added}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border text-sm font-semibold transition-all active:scale-95 ${
-                    added
-                      ? "bg-[#5C9E31]/25 border-[#5C9E31]/45 text-[#A8E063]"
-                      : adding
-                        ? "bg-white/6 border-white/10 text-white/40 cursor-wait"
-                        : "bg-white/6 border-white/10 text-white/65 hover:bg-white/12 hover:text-white hover:border-white/22"
-                  }`}
-                >
-                  {added ? (
-                    <>
-                      <CheckCircle2 size={14} /> Added!
-                    </>
-                  ) : adding ? (
-                    <>
-                      <span className="w-3.5 h-3.5 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />{" "}
-                      Adding…
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingCart size={14} /> Add to Cart
-                    </>
-                  )}
-                </button>
-              )}
+          <div className="flex items-center gap-2">
+            {user?.role === "buyer" && (
+              <>
+                {isSale && item.available && cartButton}
 
-              {!isSale && item.available && (
-                <Link
-                  to={`/listings/${item._id}`}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 text-sky-400 border border-sky-500/30 hover:border-sky-500/50 text-sm font-semibold transition-all active:scale-95"
-                >
-                  <Tractor size={14} /> Rent Now
-                </Link>
-              )}
+                {!isSale && item.available && (
+                  <Link
+                    to={`/listings/${item._id}`}
+                    aria-label={`Rent ${item.title}`}
+                    className={ICON_CHIP}
+                  >
+                    <Tractor size={18} aria-hidden="true" />
+                  </Link>
+                )}
 
-              {!item.available && (
-                <button
-                  disabled
-                  className="flex-1 flex items-center justify-center py-2.5 rounded-xl bg-white/4 border border-white/8 text-white/25 text-sm font-semibold cursor-not-allowed"
-                >
-                  Unavailable
-                </button>
-              )}
-            </>
-          )}
+                {!item.available && (
+                  <button
+                    type="button"
+                    disabled
+                    aria-label="Currently unavailable"
+                    className={`${ICON_CHIP} opacity-50 hover:bg-[#EAF4E6] hover:text-[#2E7D32]`}
+                  >
+                    <ShoppingCart size={18} aria-hidden="true" />
+                  </button>
+                )}
+              </>
+            )}
+
+            <Link
+              to={`/listings/${item._id}`}
+              aria-label={`View details for ${item.title}`}
+              className={BTN_OUTLINE_SM}
+            >
+              Details <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
+
+      <span role="status" className="sr-only">
+        {added ? "Added to cart" : ""}
+      </span>
     </div>
   );
 }
