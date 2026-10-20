@@ -1,3 +1,10 @@
+/*
+  OrganicFarm – BuyerOrders (Design System v2: light & simple)
+  App pages (not marketing pages) use a soft page background with white cards:
+  page #F6F8F4 · card #FFFFFF · soft green #EAF4E6 · border #E4E8E1 (strong #D5DBD0)
+  text #1F2A1C · muted #5B6559 · subtle #7A8576 · primary #2E7D32 (hover #256628)
+*/
+
 import { useEffect, useState, useRef } from "react";
 import {
   Package,
@@ -22,6 +29,17 @@ import {
   Truck,
 } from "lucide-react";
 import api from "../services/api";
+
+/* ── shared style primitives (same as Home / Navbar) ── */
+const container = "max-w-7xl mx-auto px-5 sm:px-8";
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F8F4]";
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-5 h-11 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnPrimary = `${btn} bg-[#2E7D32] text-white hover:bg-[#256628]`;
+const btnOutline = `${btn} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+const card = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+const field =
+  "bg-white border border-[#D5DBD0] rounded-xl h-11 text-[14px] text-[#1F2A1C] outline-none transition-colors duration-200 focus:border-[#2E7D32] focus:ring-2 focus:ring-[#2E7D32]/20";
 
 /* ── reveal ── */
 function useReveal() {
@@ -50,8 +68,8 @@ function Reveal({ children, delay = 0, className = "" }) {
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-500 ease-out
-        ${v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-5"} ${className}`}
+      className={`transition-all duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0
+        ${v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"} ${className}`}
     >
       {children}
     </div>
@@ -62,61 +80,61 @@ function Reveal({ children, delay = 0, className = "" }) {
 const ORDER_STATUS = {
   pending: {
     label: "Pending",
-    color: "text-amber-400",
-    bg: "bg-amber-400/12  border-amber-400/30",
-    dot: "bg-amber-400",
+    color: "text-amber-800",
+    bg: "bg-amber-50 border-amber-200",
+    dot: "bg-amber-500",
     icon: Clock,
   },
   confirmed: {
     label: "Confirmed",
-    color: "text-sky-400",
-    bg: "bg-sky-400/12    border-sky-400/30",
-    dot: "bg-sky-400",
+    color: "text-sky-800",
+    bg: "bg-sky-50 border-sky-200",
+    dot: "bg-sky-500",
     icon: CheckCircle2,
   },
   completed: {
     label: "Completed",
-    color: "text-[#A8E063]",
-    bg: "bg-[#5C9E31]/13 border-[#5C9E31]/32",
-    dot: "bg-[#A8E063]",
+    color: "text-emerald-800",
+    bg: "bg-emerald-50 border-emerald-200",
+    dot: "bg-emerald-600",
     icon: CheckCircle2,
   },
   cancelled: {
     label: "Cancelled",
-    color: "text-red-400",
-    bg: "bg-red-400/12    border-red-400/30",
-    dot: "bg-red-400",
+    color: "text-red-700",
+    bg: "bg-red-50 border-red-200",
+    dot: "bg-red-500",
     icon: XCircle,
   },
   shipped: {
     label: "Shipped",
-    color: "text-purple-400",
-    bg: "bg-purple-400/12 border-purple-400/30",
-    dot: "bg-purple-400",
+    color: "text-indigo-800",
+    bg: "bg-indigo-50 border-indigo-200",
+    dot: "bg-indigo-500",
     icon: Truck,
   },
 };
 const getOrderStatus = (s) => ORDER_STATUS[s] ?? ORDER_STATUS.pending;
 
 const PAYMENT_COLOR = {
-  paid: "text-[#A8E063] bg-[#5C9E31]/12 border-[#5C9E31]/30",
-  pending: "text-amber-400 bg-amber-400/12 border-amber-400/30",
-  failed: "text-red-400   bg-red-400/12   border-red-400/30",
+  paid: "text-emerald-800 bg-emerald-50 border-emerald-200",
+  pending: "text-amber-800 bg-amber-50 border-amber-200",
+  failed: "text-red-700 bg-red-50 border-red-200",
 };
 
 /* ── skeleton ── */
 function Skeleton() {
   return (
-    <div className="rounded-2xl bg-white/4 border border-white/8 overflow-hidden animate-pulse">
-      <div className="h-52 bg-white/8" />
+    <div
+      className={`${card} overflow-hidden animate-pulse motion-reduce:animate-none`}
+      aria-hidden="true"
+    >
+      <div className="h-44 bg-[#E9EDE6]" />
       <div className="p-6 space-y-3">
-        <div className="h-4 bg-white/10 rounded-full w-3/4" />
-        <div className="h-3 bg-white/7  rounded-full w-1/2" />
-        <div className="h-3 bg-white/7  rounded-full w-2/3" />
-        <div className="grid grid-cols-2 gap-2 pt-2">
-          <div className="h-10 bg-white/6 rounded-xl" />
-          <div className="h-10 bg-white/6 rounded-xl" />
-        </div>
+        <div className="h-4 bg-[#E9EDE6] rounded-full w-3/4" />
+        <div className="h-3 bg-[#EEF1EB] rounded-full w-1/2" />
+        <div className="h-3 bg-[#EEF1EB] rounded-full w-2/3" />
+        <div className="h-20 bg-[#F3F5F0] rounded-xl mt-4" />
       </div>
     </div>
   );
@@ -125,12 +143,12 @@ function Skeleton() {
 /* ── info row ── */
 function InfoRow({ icon: Icon, label, value, accent = false }) {
   return (
-    <div className="flex items-center justify-between py-2.5 border-b border-white/5 last:border-0">
-      <span className="flex items-center gap-2 text-xs text-white/40">
-        <Icon size={12} className="shrink-0" /> {label}
+    <div className="flex items-center justify-between py-2.5 border-b border-[#E4E8E1] last:border-0">
+      <span className="flex items-center gap-2 text-[13px] text-[#5B6559]">
+        <Icon size={13} className="shrink-0" aria-hidden="true" /> {label}
       </span>
       <span
-        className={`text-sm font-semibold ${accent ? "text-[#A8E063]" : "text-white/80"}`}
+        className={`text-sm font-semibold ${accent ? "text-[#256628]" : "text-[#1F2A1C]"}`}
       >
         {value}
       </span>
@@ -225,44 +243,56 @@ export default function BuyerOrders() {
     statusF !== "All" ? 1 : 0,
   ].reduce((a, b) => a + b, 0);
 
+  const clearFilters = () => {
+    setSearch("");
+    setStatusF("All");
+  };
+
   /* ═══════════════════ RENDER ═══════════════════ */
   return (
-    <div className="min-h-screen bg-[#0B0F0A] text-white font-['Inter',sans-serif]">
+    <div className="min-h-screen bg-[#F6F8F4] text-[#1F2A1C] font-['Inter',sans-serif]">
       {/* toast */}
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5
-          rounded-2xl border text-sm font-semibold shadow-2xl animate-[slideRight_0.3s_ease-out] ${
+          role={toast.ok ? "status" : "alert"}
+          className={`fixed top-20 right-5 sm:right-8 z-50 flex items-center gap-3 px-5 py-3.5
+          rounded-xl border bg-white text-sm font-semibold shadow-lg animate-[slideRight_0.3s_ease-out] motion-reduce:animate-none ${
             toast.ok
-              ? "bg-[#0E140D] border-[#5C9E31]/40 text-[#A8E063]"
-              : "bg-[#140e0e] border-red-500/40   text-red-400"
+              ? "border-[#2E7D32]/40 text-[#256628]"
+              : "border-red-200 text-red-700"
           }`}
         >
           <span
-            className={`w-2 h-2 rounded-full ${toast.ok ? "bg-[#A8E063]" : "bg-red-400"}`}
+            className={`w-2 h-2 rounded-full ${toast.ok ? "bg-[#2E7D32]" : "bg-red-500"}`}
           />
           {toast.msg}
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-20">
+      <div className={`${container} pt-28 pb-20`}>
         {/* ── HEADER ── */}
         <Reveal>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
             <div>
-              <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-2">
-                Buyer Dashboard
+              <p className="text-sm font-semibold text-[#2E7D32] mb-1">
+                Buyer dashboard
               </p>
-              <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold">
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
                 My Orders
               </h1>
             </div>
             <button
+              type="button"
               onClick={fetchOrders}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10
-                text-white/55 hover:text-white hover:bg-white/10 text-sm font-medium transition-all w-fit"
+              className={`${btnOutline} w-fit`}
             >
-              <RefreshCw size={14} /> Refresh
+              <RefreshCw
+                size={14}
+                className={
+                  loading ? "animate-spin motion-reduce:animate-none" : ""
+                }
+              />{" "}
+              Refresh
             </button>
           </div>
         </Reveal>
@@ -270,45 +300,39 @@ export default function BuyerOrders() {
         {/* ── STATS ── */}
         {!loading && orders.length > 0 && (
           <Reveal delay={60}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               {[
                 {
                   icon: ShoppingBag,
-                  label: "Total Orders",
+                  label: "Total orders",
                   value: orders.length,
-                  color: "text-white",
                 },
                 {
                   icon: Clock,
                   label: "Pending",
                   value: pendingCount,
-                  color: "text-amber-400",
                 },
                 {
                   icon: CheckCircle2,
                   label: "Completed",
                   value: doneCount,
-                  color: "text-[#A8E063]",
                 },
                 {
                   icon: TrendingUp,
-                  label: "Total Spent",
+                  label: "Total spent",
                   value: `₹${totalSpent.toLocaleString("en-IN")}`,
-                  color: "text-[#A8E063]",
                 },
-              ].map(({ icon: Icon, label, value, color }) => (
+              ].map(({ icon: Icon, label, value }) => (
                 <div
                   key={label}
-                  className="flex items-center gap-4 rounded-2xl bg-white/4 border border-white/8 px-5 py-4"
+                  className={`${card} flex items-center gap-4 px-5 py-4`}
                 >
-                  <Icon size={20} className={`shrink-0 ${color}`} />
-                  <div>
-                    <p
-                      className={`font-['Playfair_Display',serif] text-xl font-bold ${color}`}
-                    >
-                      {value}
-                    </p>
-                    <p className="text-xs text-white/35 mt-0.5">{label}</p>
+                  <span className="grid place-items-center w-11 h-11 rounded-xl bg-[#EAF4E6] text-[#2E7D32] shrink-0">
+                    <Icon size={20} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-xl font-bold truncate">{value}</p>
+                    <p className="text-[13px] text-[#5B6559] mt-0.5">{label}</p>
                   </div>
                 </div>
               ))}
@@ -320,94 +344,96 @@ export default function BuyerOrders() {
         <Reveal delay={100}>
           <div className="flex flex-col sm:flex-row gap-3 mb-4">
             {/* search */}
-            <div
-              className="flex-1 flex items-center gap-2.5 bg-white/5 border border-white/10 rounded-xl
-              px-4 py-3 focus-within:border-[#5C9E31]/45 transition-all"
+            <label
+              className={`flex-1 flex items-center gap-2.5 px-4 focus-within:border-[#2E7D32] focus-within:ring-2 focus-within:ring-[#2E7D32]/20 bg-white border border-[#D5DBD0] rounded-xl h-11 transition-colors duration-200`}
             >
-              <Search size={15} className="text-white/30 shrink-0" />
+              <span className="sr-only">Search orders</span>
+              <Search size={15} className="text-[#7A8576] shrink-0" />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by product or seller name…"
-                className="w-full bg-transparent outline-none text-[14px] text-white placeholder:text-white/25"
+                className="w-full bg-transparent outline-none text-[14px] text-[#1F2A1C] placeholder:text-[#7A8576]"
               />
               {search && (
                 <button
+                  type="button"
+                  aria-label="Clear search"
                   onClick={() => setSearch("")}
-                  className="text-white/25 hover:text-white/60 transition-colors"
+                  className={`text-[#7A8576] hover:text-[#1F2A1C] transition-colors duration-200 rounded ${focusRing}`}
                 >
-                  <X size={13} />
+                  <X size={14} />
                 </button>
               )}
-            </div>
+            </label>
 
             {/* sort */}
             <div className="relative">
               <select
                 value={sortBy}
                 onChange={(e) => setSort(e.target.value)}
-                className="appearance-none bg-white/5 border border-white/10 rounded-xl pl-4 pr-9 py-3
-                  text-[14px] text-white/70 outline-none hover:border-white/20 focus:border-[#5C9E31]/45
-                  transition-all cursor-pointer"
+                aria-label="Sort orders"
+                className={`${field} appearance-none pl-4 pr-9 cursor-pointer w-full sm:w-auto`}
               >
                 {SORT_OPTIONS.map((s) => (
-                  <option
-                    key={s.value}
-                    value={s.value}
-                    className="bg-[#0E140D]"
-                  >
+                  <option key={s.value} value={s.value}>
                     {s.label}
                   </option>
                 ))}
               </select>
               <ChevronDown
                 size={14}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 pointer-events-none"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#7A8576] pointer-events-none"
               />
             </div>
           </div>
 
           {/* status filter pills */}
-          <div className="flex gap-2 overflow-x-auto pb-1 mb-6 scrollbar-hide">
+          <div
+            className="flex gap-2 overflow-x-auto pb-1 mb-5 scrollbar-hide"
+            role="group"
+            aria-label="Filter orders by status"
+          >
             {STATUS_FILTERS.map((f) => {
               const st = ORDER_STATUS[f];
               return (
                 <button
                   key={f}
+                  type="button"
+                  aria-pressed={statusF === f}
                   onClick={() => setStatusF(f)}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold
-                    whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-1.5 px-4 h-10 rounded-full text-sm font-medium
+                    whitespace-nowrap transition-colors duration-200 ${focusRing} ${
                       statusF === f
-                        ? "bg-[#5C9E31] text-white shadow-[0_0_16px_rgba(92,158,49,0.4)]"
-                        : "bg-white/5 text-white/50 border border-white/8 hover:bg-white/10 hover:text-white"
+                        ? "bg-[#2E7D32] text-white"
+                        : "bg-white text-[#5B6559] border border-[#D5DBD0] hover:border-[#2E7D32] hover:text-[#2E7D32]"
                     }`}
                 >
                   {st && (
-                    <span className={`w-1.5 h-1.5 rounded-full ${st.dot}`} />
+                    <span
+                      className={`w-1.5 h-1.5 rounded-full ${statusF === f ? "bg-white" : st.dot}`}
+                    />
                   )}
-                  {f === "All" ? "All Orders" : st?.label}
+                  {f === "All" ? "All orders" : st?.label}
                 </button>
               );
             })}
           </div>
 
-          <div className="flex items-center justify-between mb-6">
-            <p className="text-xs text-white/35">
+          <div className="flex items-center justify-between mb-6 min-h-[28px]">
+            <p className="text-[13px] text-[#5B6559]" aria-live="polite">
               {loading
                 ? "Loading…"
                 : `${filtered.length} of ${orders.length} orders`}
             </p>
             {activeFilters > 0 && (
               <button
-                onClick={() => {
-                  setSearch("");
-                  setStatusF("All");
-                }}
-                className="flex items-center gap-1.5 text-xs text-[#A8E063] hover:text-white
-                  border border-[#5C9E31]/30 hover:border-white/20 px-3 py-1.5 rounded-full transition-all"
+                type="button"
+                onClick={clearFilters}
+                className={`flex items-center gap-1.5 text-[13px] font-medium text-[#256628] bg-[#EAF4E6] hover:bg-[#DCEED6] px-3 py-1.5 rounded-full transition-colors duration-200 ${focusRing}`}
               >
-                <X size={11} /> Clear {activeFilters} filter
+                <X size={12} /> Clear {activeFilters} filter
                 {activeFilters > 1 ? "s" : ""}
               </button>
             )}
@@ -428,22 +454,18 @@ export default function BuyerOrders() {
         {/* ── EMPTY STATE ── */}
         {!loading && orders.length === 0 && (
           <Reveal>
-            <div className="flex flex-col items-center justify-center py-28 text-center">
-              <span className="grid place-items-center w-20 h-20 rounded-3xl bg-white/4 border border-white/8 mb-6">
-                <ShoppingBag size={36} className="text-white/15" />
+            <div
+              className={`${card} flex flex-col items-center justify-center py-20 px-6 text-center`}
+            >
+              <span className="grid place-items-center w-16 h-16 rounded-2xl bg-[#EAF4E6] text-[#2E7D32] mb-5">
+                <ShoppingBag size={28} aria-hidden="true" />
               </span>
-              <h2 className="font-['Playfair_Display',serif] text-2xl font-bold mb-2">
-                No orders yet
-              </h2>
-              <p className="text-white/35 text-sm max-w-xs leading-relaxed">
+              <h2 className="text-xl font-bold mb-2">No orders yet</h2>
+              <p className="text-[#5B6559] text-sm max-w-xs leading-relaxed">
                 Your order history will appear here once you make your first
                 purchase.
               </p>
-              <a
-                href="/listings"
-                className="mt-7 flex items-center gap-2 px-6 py-3 rounded-xl bg-[#5C9E31] hover:bg-[#4E8A28]
-                  font-semibold text-sm transition-all active:scale-95 shadow-[0_0_20px_rgba(92,158,49,0.35)]"
-              >
+              <a href="/listings" className={`${btnPrimary} mt-6`}>
                 Browse Marketplace <ArrowRight size={15} />
               </a>
             </div>
@@ -453,15 +475,20 @@ export default function BuyerOrders() {
         {/* ── NO FILTER RESULTS ── */}
         {!loading && orders.length > 0 && filtered.length === 0 && (
           <Reveal>
-            <div className="flex flex-col items-center py-20 text-center">
-              <Filter size={36} className="text-white/15 mb-4" />
+            <div
+              className={`${card} flex flex-col items-center py-16 px-6 text-center`}
+            >
+              <span className="grid place-items-center w-14 h-14 rounded-2xl bg-[#F6F8F4] text-[#7A8576] mb-4">
+                <Filter size={24} aria-hidden="true" />
+              </span>
               <p className="font-semibold mb-1">No orders match your filters</p>
+              <p className="text-sm text-[#5B6559]">
+                Try a different search or status.
+              </p>
               <button
-                onClick={() => {
-                  setSearch("");
-                  setStatusF("All");
-                }}
-                className="mt-4 px-5 py-2 text-sm rounded-xl border border-white/12 hover:bg-white/6 transition-all"
+                type="button"
+                onClick={clearFilters}
+                className={`${btnOutline} mt-5`}
               >
                 Clear filters
               </button>
@@ -474,78 +501,74 @@ export default function BuyerOrders() {
           <div className="grid lg:grid-cols-2 gap-5">
             {filtered.map((order, i) => {
               const st = getOrderStatus(order.orderStatus);
-              const StatusIcon = st.icon;
               const payColor =
                 PAYMENT_COLOR[order.paymentStatus] ?? PAYMENT_COLOR.pending;
+              const StatusIcon = st.icon;
 
               return (
-                <Reveal key={order._id} delay={i * 60}>
+                <Reveal key={order._id} delay={(i % 2) * 80}>
                   <div
-                    className="group rounded-2xl bg-white/4 border border-white/8 hover:border-white/16
-                    overflow-hidden hover:shadow-[0_16px_50px_rgba(0,0,0,0.45)] transition-all duration-300"
+                    className={`group h-full overflow-hidden ${card} hover:shadow-md transition-shadow duration-200`}
                   >
                     {/* image */}
-                    <div className="relative h-52 overflow-hidden bg-white/6">
+                    <div className="relative h-44 overflow-hidden bg-[#EAF4E6]">
                       <img
                         src={order.listing?.image}
                         alt={order.listing?.title}
+                        loading="lazy"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 motion-reduce:transition-none"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
 
                       {/* order status badge */}
-                      <div
-                        className={`absolute top-3 left-3 flex items-center gap-1.5 text-[11px]
-                        font-['Space_Mono',monospace] uppercase tracking-wider px-3 py-1.5
-                        rounded-full border backdrop-blur-sm ${st.bg} ${st.color}`}
+                      <span
+                        className={`absolute top-3 left-3 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border ${st.bg} ${st.color}`}
                       >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${st.dot} ${order.orderStatus === "confirmed" || order.orderStatus === "shipped" ? "animate-pulse" : ""}`}
-                        />
+                        <StatusIcon size={12} aria-hidden="true" />
                         {st.label}
-                      </div>
+                      </span>
 
                       {/* payment badge */}
-                      <div
-                        className={`absolute top-3 right-3 flex items-center gap-1.5 text-[11px]
-                        font-semibold px-3 py-1.5 rounded-full border backdrop-blur-sm ${payColor}`}
+                      <span
+                        className={`absolute top-3 right-3 inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full border capitalize ${payColor}`}
                       >
-                        <CreditCard size={11} /> {order.paymentStatus}
-                      </div>
-
-                      {/* title + price overlay */}
-                      <div className="absolute bottom-3 left-4 right-4">
-                        <h2 className="font-['Playfair_Display',serif] text-lg font-bold leading-snug drop-shadow-lg line-clamp-1">
-                          {order.listing?.title}
-                        </h2>
-                        <p className="text-[#A8E063] font-bold text-xl mt-0.5 drop-shadow-lg">
-                          ₹{order.totalPrice?.toLocaleString("en-IN")}
-                        </p>
-                      </div>
+                        <CreditCard size={12} aria-hidden="true" />
+                        <span className="sr-only">Payment:</span>
+                        {order.paymentStatus}
+                      </span>
                     </div>
 
                     {/* body */}
                     <div className="p-6">
+                      <div className="flex items-start justify-between gap-4 mb-5">
+                        <h2 className="text-lg font-semibold leading-snug min-w-0 truncate">
+                          {order.listing?.title}
+                        </h2>
+                        <p className="text-xl font-bold text-[#256628] shrink-0">
+                          ₹{order.totalPrice?.toLocaleString("en-IN")}
+                        </p>
+                      </div>
+
                       {/* seller info */}
-                      <div className="flex items-center gap-3 mb-5 p-3.5 rounded-xl bg-white/4 border border-white/7">
-                        <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#5C9E31]/15 text-[#A8E063] shrink-0">
-                          <User size={16} />
+                      <div className="flex items-center gap-3 mb-4 p-3.5 rounded-xl bg-[#F6F8F4] border border-[#E4E8E1]">
+                        <span className="grid place-items-center w-9 h-9 rounded-lg bg-[#EAF4E6] text-[#2E7D32] shrink-0">
+                          <User size={16} aria-hidden="true" />
                         </span>
                         <div className="min-w-0">
                           <p className="text-sm font-semibold truncate">
                             {order.seller?.name}
                           </p>
-                          <p className="flex items-center gap-1 text-xs text-white/40 mt-0.5 truncate">
-                            <Mail size={10} /> {order.seller?.email}
+                          <p className="flex items-center gap-1 text-xs text-[#5B6559] mt-0.5 truncate">
+                            <Mail size={11} aria-hidden="true" />{" "}
+                            {order.seller?.email}
                           </p>
                         </div>
                       </div>
 
                       {/* order details */}
-                      <div className="rounded-xl bg-white/3 border border-white/6 px-4 py-1 mb-5">
+                      <div className="px-1">
                         <InfoRow
                           icon={Hash}
                           label="Quantity"
@@ -566,24 +589,6 @@ export default function BuyerOrders() {
                           )}
                         />
                       </div>
-
-                      {/* status + payment footer */}
-                      <div className="flex items-center justify-between gap-3">
-                        <div
-                          className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5
-                          rounded-xl border flex-1 justify-center ${st.bg} ${st.color}`}
-                        >
-                          <StatusIcon size={15} /> {st.label}
-                        </div>
-                        <div
-                          className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5
-                          rounded-xl border flex-1 justify-center ${payColor}`}
-                        >
-                          <CreditCard size={15} />
-                          {order.paymentStatus?.charAt(0).toUpperCase() +
-                            order.paymentStatus?.slice(1)}
-                        </div>
-                      </div>
                     </div>
                   </div>
                 </Reveal>
@@ -595,7 +600,7 @@ export default function BuyerOrders() {
 
       <style>{`
         @keyframes slideRight {
-          from { transform:translateX(40px); opacity:0; }
+          from { transform:translateX(24px); opacity:0; }
           to   { transform:translateX(0);    opacity:1; }
         }
         .scrollbar-hide::-webkit-scrollbar { display:none; }
