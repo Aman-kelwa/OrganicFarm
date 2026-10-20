@@ -17,63 +17,67 @@ import {
 import api from "../services/api";
 import { useAuth } from "../context/AuthContext";
 
-/* ── floating particle (same as Login) ── */
-function Particle({ style }) {
-  return (
-    <div
-      className="absolute w-1 h-1 rounded-full bg-[#5C9E31]/40 animate-[floatUp_var(--dur)_linear_infinite]"
-      style={style}
-    />
-  );
-}
-
-/* ── left panel animated background ── */
-function FieldBG() {
-  const particles = Array.from({ length: 18 }, (_, i) => ({
-    left: `${(i * 5.8 + 3) % 100}%`,
-    "--dur": `${4 + (i % 5)}s`,
-    animationDelay: `${(i * 0.4) % 4}s`,
-    bottom: "-10px",
-  }));
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      <div className="absolute inset-0 bg-gradient-to-br from-[#061008] via-[#040c06] to-[#020804]" />
-      <div className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-[#1a4a0d]/50 blur-[100px]" />
-      <div className="absolute -bottom-20 -left-20  w-[400px] h-[400px] rounded-full bg-[#0d2e06]/60 blur-[80px]" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-[#5C9E31]/5 blur-[60px]" />
-      <div className="absolute inset-0 opacity-[0.06] bg-[radial-gradient(circle_at_1.5px_1.5px,#6abf3e_1px,transparent_0)] bg-[length:28px_28px]" />
-      {particles.map((s, i) => (
-        <Particle key={i} style={s} />
-      ))}
-    </div>
-  );
-}
+/* ════════════════════════════════════════════════════
+   SHARED STYLE CONSTANTS
+   (same names as the other pages — move them into one
+   shared file, e.g. src/styles/ui.js, and import them)
+   ════════════════════════════════════════════════════ */
+const FOCUS =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2";
+const CARD = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+const BTN = `inline-flex items-center justify-center gap-2 h-12 px-6 rounded-xl text-sm font-semibold whitespace-nowrap transition-colors duration-200 ${FOCUS}`;
+const BTN_PRIMARY = `${BTN} bg-[#2E7D32] text-white hover:bg-[#256628] disabled:opacity-60 disabled:cursor-not-allowed`;
 
 /* ── custom input ── */
 function InputField({ icon: Icon, rightEl, ...props }) {
-  const [focused, setFocused] = useState(false);
   return (
-    <div
-      className={`relative flex items-center gap-3 rounded-2xl px-4 py-3.5 border
-      transition-all duration-300 bg-white/[0.04]
-      ${
-        focused
-          ? "border-[#5C9E31]/60 shadow-[0_0_0_3px_rgba(92,158,49,0.12)] bg-white/[0.07]"
-          : "border-white/10 hover:border-white/20"
+    <div className="flex h-12 items-center gap-3 rounded-xl border border-[#D5DBD0] bg-white pl-4 pr-1 transition-shadow duration-200 focus-within:ring-2 focus-within:ring-[#2E7D32] focus-within:ring-offset-2">
+      <Icon size={17} aria-hidden="true" className="shrink-0 text-[#7A8576]" />
+      <input
+        aria-label={props["aria-label"] ?? props.placeholder}
+        {...props}
+        className="min-w-0 flex-1 bg-transparent text-sm text-[#1F2A1C] outline-none placeholder:text-[#7A8576]"
+      />
+      {rightEl ?? <span className="w-3 shrink-0" />}
+    </div>
+  );
+}
+
+/* ── role option card ── */
+function RoleOption({ selected, onSelect, icon: Icon, title, description }) {
+  return (
+    <button
+      type="button"
+      role="radio"
+      aria-checked={selected}
+      onClick={onSelect}
+      className={`relative flex flex-col items-start gap-3 rounded-2xl border p-4 text-left transition-colors duration-200 ${FOCUS} ${
+        selected
+          ? "border-[#2E7D32] bg-[#EAF4E6]"
+          : "border-[#E4E8E1] bg-white hover:bg-[#F6F8F4]"
       }`}
     >
-      <Icon
-        size={17}
-        className={`shrink-0 transition-colors ${focused ? "text-[#A8E063]" : "text-white/30"}`}
-      />
-      <input
-        {...props}
-        onFocus={() => setFocused(true)}
-        onBlur={() => setFocused(false)}
-        className="flex-1 bg-transparent outline-none text-[15px] text-white placeholder:text-white/25"
-      />
-      {rightEl}
-    </div>
+      <span
+        className={`grid h-10 w-10 place-items-center rounded-xl text-[#2E7D32] ${
+          selected ? "bg-white" : "bg-[#EAF4E6]"
+        }`}
+      >
+        <Icon size={18} aria-hidden="true" />
+      </span>
+      <div>
+        <p className="text-sm font-semibold text-[#1F2A1C]">{title}</p>
+        <p className="mt-0.5 text-xs leading-relaxed text-[#5B6559]">
+          {description}
+        </p>
+      </div>
+      {selected && (
+        <CheckCircle2
+          size={18}
+          aria-hidden="true"
+          className="absolute right-3 top-3 text-[#2E7D32]"
+        />
+      )}
+    </button>
   );
 }
 
@@ -119,78 +123,58 @@ export default function Register() {
 
   /* ════════ RENDER ════════ */
   return (
-    <div className="min-h-screen grid lg:grid-cols-2 font-['Inter',sans-serif]">
+    <div className="grid min-h-screen bg-white font-['Inter',sans-serif] text-[#1F2A1C] lg:grid-cols-2">
       {/* ══════════════════════════════════════
           LEFT PANEL
       ══════════════════════════════════════ */}
-      <div className="relative hidden lg:flex flex-col justify-between px-14 py-12 pt-28 overflow-hidden">
-        <FieldBG />
+      <div className="hidden flex-col justify-between border-r border-[#E4E8E1] bg-[#F6F8F4] px-14 pb-12 pt-28 lg:flex xl:px-20">
+        <div className="animate-[riseIn_0.6s_ease-out_both] motion-reduce:animate-none">
+          <span className="mb-6 grid h-12 w-12 place-items-center rounded-xl bg-[#EAF4E6] text-[#2E7D32]">
+            <Wheat size={24} aria-hidden="true" />
+          </span>
 
-        {/* center content */}
-        <div className="relative">
-          <Wheat
-            size={120}
-            strokeWidth={0.5}
-            className="text-[#5C9E31]/10 mb-6 -ml-2"
-          />
-
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-4">
+          <p className="mb-2 text-sm font-semibold text-[#2E7D32]">
             Join the field
           </p>
-          <h1 className="font-['Playfair_Display',serif] text-5xl font-black leading-[1.05] text-white mb-6">
-            Where farmers
-            <br />
-            and buyers
-            <br />
-            <span className="italic text-[#A8E063]">meet direct.</span>
+          <h1 className="mb-5 text-4xl font-bold leading-[1.1] tracking-tight xl:text-5xl">
+            Where farmers and buyers meet direct.
           </h1>
-          <p className="text-white/40 max-w-sm leading-relaxed text-[15px]">
+          <p className="max-w-md text-base leading-relaxed text-[#5B6559]">
             Create an account to list your harvest or start sourcing fresh,
             fairly-priced produce straight from the source. No middlemen, ever.
           </p>
 
           {/* feature list */}
-          <div className="mt-10 space-y-3">
+          <ul className="mt-8 space-y-3">
             {[
               "List crops, dairy, seeds and tools",
               "Secure Razorpay payments",
               "Real-time order tracking",
               "Zero hidden commissions",
             ].map((f) => (
-              <div key={f} className="flex items-center gap-3">
-                <span
-                  className="w-5 h-5 rounded-full bg-[#5C9E31]/20 border border-[#5C9E31]/40
-                  grid place-items-center shrink-0"
-                >
-                  <CheckCircle2 size={11} className="text-[#A8E063]" />
+              <li key={f} className="flex items-center gap-3">
+                <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-[#EAF4E6] text-[#2E7D32]">
+                  <CheckCircle2 size={14} aria-hidden="true" />
                 </span>
-                <span className="text-sm text-white/50">{f}</span>
-              </div>
+                <span className="text-sm text-[#5B6559]">{f}</span>
+              </li>
             ))}
-          </div>
-
-          <div className="mt-10 flex items-center gap-3">
-            <div className="h-px flex-1 bg-gradient-to-r from-[#5C9E31]/40 to-transparent" />
-          </div>
+          </ul>
         </div>
 
         {/* bottom stats */}
-        <div className="relative grid grid-cols-3 gap-0 rounded-2xl bg-white/[0.04] border border-white/8 overflow-hidden">
+        <div className={`${CARD} mt-10 grid grid-cols-3 overflow-hidden`}>
           {[
-            { n: "12K+", l: "Verified Farmers" },
-            { n: "4,500+", l: "Live Listings" },
-            { n: "₹0", l: "Hidden Fees" },
+            { n: "12K+", l: "Verified farmers" },
+            { n: "4,500+", l: "Live listings" },
+            { n: "₹0", l: "Hidden fees" },
           ].map(({ n, l }, i) => (
             <div
               key={l}
-              className={`px-5 py-4 text-center ${i < 2 ? "border-r border-white/6" : ""}`}
+              className={`px-4 py-5 text-center ${i < 2 ? "border-r border-[#E4E8E1]" : ""}`}
             >
-              <p className="font-['Playfair_Display',serif] text-2xl font-bold text-[#A8E063]">
-                {n}
-              </p>
-              <p className="text-[11px] text-white/35 mt-1 font-['Space_Mono',monospace]">
-                {l}
-              </p>
+              <p className="text-2xl font-bold">{n}</p>
+              <p className="mt-1 text-sm text-[#5B6559]">{l}</p>
             </div>
           ))}
         </div>
@@ -199,26 +183,18 @@ export default function Register() {
       {/* ══════════════════════════════════════
           RIGHT PANEL — form
       ══════════════════════════════════════ */}
-      <div
-        className="relative flex items-center justify-center px-5 sm:px-10 py-12 pt-28
-        bg-[#060A06] overflow-hidden"
-      >
-        <div className="absolute top-0 right-0 w-80 h-80 rounded-full bg-[#5C9E31]/6 blur-[80px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0  w-60 h-60 rounded-full bg-[#5C9E31]/4 blur-[60px] pointer-events-none" />
-
-        <div className="relative w-full max-w-md animate-[riseIn_0.6s_ease-out]">
+      <div className="flex items-center justify-center bg-white px-5 pb-12 pt-28 sm:px-10">
+        <div className="w-full max-w-md animate-[riseIn_0.6s_ease-out_both] motion-reduce:animate-none">
           {/* heading */}
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase mb-3">
-            Sign up
-          </p>
-          <h2 className="font-['Playfair_Display',serif] text-3xl sm:text-4xl font-black text-white leading-tight mb-2">
+          <p className="mb-2 text-sm font-semibold text-[#2E7D32]">Sign up</p>
+          <h2 className="mb-2 text-3xl font-bold tracking-tight sm:text-4xl">
             Create your account
           </h2>
-          <p className="text-white/40 text-sm mb-8">
+          <p className="mb-8 text-sm text-[#5B6559]">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-[#A8E063] font-semibold hover:text-white transition-colors"
+              className={`rounded font-semibold text-[#2E7D32] transition-colors duration-200 hover:text-[#256628] ${FOCUS}`}
             >
               Log in
             </Link>
@@ -227,8 +203,8 @@ export default function Register() {
           {/* error */}
           {error && (
             <div
-              className="text-sm text-red-400 bg-red-500/8 border border-red-500/20
-              rounded-xl px-4 py-3 mb-5 animate-[shake_0.4s_ease-in-out]"
+              role="alert"
+              className="mb-5 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
             >
               {error}
             </div>
@@ -241,6 +217,7 @@ export default function Register() {
               type="text"
               name="name"
               placeholder="Full name"
+              autoComplete="name"
               value={formData.name}
               onChange={handleChange}
               required
@@ -252,6 +229,7 @@ export default function Register() {
               type="email"
               name="email"
               placeholder="Email address"
+              autoComplete="email"
               value={formData.email}
               onChange={handleChange}
               required
@@ -263,6 +241,7 @@ export default function Register() {
               type={showPassword ? "text" : "password"}
               name="password"
               placeholder="Password (min. 6 characters)"
+              autoComplete="new-password"
               value={formData.password}
               onChange={handleChange}
               required
@@ -271,103 +250,43 @@ export default function Register() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="shrink-0 text-white/25 hover:text-white/60 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  aria-pressed={showPassword}
+                  className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#7A8576] transition-colors duration-200 hover:bg-[#F6F8F4] hover:text-[#1F2A1C] ${FOCUS}`}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? (
+                    <EyeOff size={16} aria-hidden="true" />
+                  ) : (
+                    <Eye size={16} aria-hidden="true" />
+                  )}
                 </button>
               }
             />
 
             {/* role picker */}
             <div>
-              <p
-                className="font-['Space_Mono',monospace] text-[11px] uppercase tracking-widest
-                text-white/30 mb-3"
-              >
-                I'm joining as
+              <p id="role-label" className="mb-3 text-sm font-semibold">
+                I’m joining as
               </p>
-              <div className="grid grid-cols-2 gap-3">
-                {/* BUYER */}
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect("buyer")}
-                  className={`relative flex flex-col items-start gap-3 p-5 rounded-2xl border
-                    text-left transition-all duration-200 overflow-hidden
-                    ${
-                      formData.role === "buyer"
-                        ? "bg-[#5C9E31]/15 border-[#5C9E31]/50 shadow-[0_0_20px_rgba(92,158,49,0.12)]"
-                        : "bg-white/[0.04] border-white/10 hover:border-white/22 hover:bg-white/[0.07]"
-                    }`}
-                >
-                  <span
-                    className={`grid place-items-center w-9 h-9 rounded-xl transition-colors ${
-                      formData.role === "buyer"
-                        ? "bg-[#5C9E31]/25 text-[#A8E063]"
-                        : "bg-white/8 text-white/40"
-                    }`}
-                  >
-                    <ShoppingBasket size={18} />
-                  </span>
-                  <div>
-                    <p
-                      className={`font-semibold text-sm ${formData.role === "buyer" ? "text-[#A8E063]" : "text-white/75"}`}
-                    >
-                      Buyer
-                    </p>
-                    <p className="text-[11px] text-white/30 mt-0.5 leading-relaxed">
-                      Browse and buy directly from farmers
-                    </p>
-                  </div>
-                  {formData.role === "buyer" && (
-                    <span
-                      className="absolute top-3 right-3 w-5 h-5 rounded-full bg-[#5C9E31]
-                      grid place-items-center shadow-[0_0_10px_rgba(92,158,49,0.6)]"
-                    >
-                      <CheckCircle2 size={11} className="text-white" />
-                    </span>
-                  )}
-                </button>
-
-                {/* SELLER */}
-                <button
-                  type="button"
-                  onClick={() => handleRoleSelect("seller")}
-                  className={`relative flex flex-col items-start gap-3 p-5 rounded-2xl border
-                    text-left transition-all duration-200 overflow-hidden
-                    ${
-                      formData.role === "seller"
-                        ? "bg-amber-500/12 border-amber-500/45 shadow-[0_0_20px_rgba(245,158,11,0.1)]"
-                        : "bg-white/[0.04] border-white/10 hover:border-white/22 hover:bg-white/[0.07]"
-                    }`}
-                >
-                  <span
-                    className={`grid place-items-center w-9 h-9 rounded-xl transition-colors ${
-                      formData.role === "seller"
-                        ? "bg-amber-500/20 text-amber-400"
-                        : "bg-white/8 text-white/40"
-                    }`}
-                  >
-                    <Sprout size={18} />
-                  </span>
-                  <div>
-                    <p
-                      className={`font-semibold text-sm ${formData.role === "seller" ? "text-amber-400" : "text-white/75"}`}
-                    >
-                      Seller
-                    </p>
-                    <p className="text-[11px] text-white/30 mt-0.5 leading-relaxed">
-                      List your harvest and earn more
-                    </p>
-                  </div>
-                  {formData.role === "seller" && (
-                    <span
-                      className="absolute top-3 right-3 w-5 h-5 rounded-full bg-amber-500
-                      grid place-items-center shadow-[0_0_10px_rgba(245,158,11,0.5)]"
-                    >
-                      <CheckCircle2 size={11} className="text-white" />
-                    </span>
-                  )}
-                </button>
+              <div
+                role="radiogroup"
+                aria-labelledby="role-label"
+                className="grid grid-cols-2 gap-3"
+              >
+                <RoleOption
+                  selected={formData.role === "buyer"}
+                  onSelect={() => handleRoleSelect("buyer")}
+                  icon={ShoppingBasket}
+                  title="Buyer"
+                  description="Browse and buy directly from farmers"
+                />
+                <RoleOption
+                  selected={formData.role === "seller"}
+                  onSelect={() => handleRoleSelect("seller")}
+                  icon={Sprout}
+                  title="Seller"
+                  description="List your harvest and earn more"
+                />
               </div>
             </div>
 
@@ -375,19 +294,16 @@ export default function Register() {
             <button
               type="submit"
               disabled={loading}
-              className={`group w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl
-                font-bold text-[15px] text-white transition-all active:scale-[0.98]
-                disabled:opacity-50
-                ${
-                  formData.role === "seller"
-                    ? "bg-amber-500 hover:bg-amber-600 shadow-[0_0_28px_rgba(245,158,11,0.35)] hover:shadow-[0_0_40px_rgba(245,158,11,0.5)]"
-                    : "bg-[#5C9E31] hover:bg-[#4e8a28] shadow-[0_0_28px_rgba(92,158,49,0.4)] hover:shadow-[0_0_40px_rgba(92,158,49,0.6)]"
-                }`}
+              className={`${BTN_PRIMARY} group w-full`}
             >
               {loading ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" /> Creating
-                  account…
+                  <Loader2
+                    size={18}
+                    aria-hidden="true"
+                    className="animate-spin motion-reduce:animate-none"
+                  />{" "}
+                  Creating account…
                 </>
               ) : (
                 <>
@@ -396,22 +312,19 @@ export default function Register() {
                     : "Join as Buyer"}
                   <ArrowRight
                     size={17}
-                    className="group-hover:translate-x-1 transition-transform duration-200"
+                    aria-hidden="true"
+                    className="transition-transform duration-200 group-hover:translate-x-1 motion-reduce:transition-none motion-reduce:group-hover:translate-x-0"
                   />
                 </>
               )}
             </button>
           </form>
 
-          <p className="text-center text-xs text-white/20 mt-8 leading-relaxed">
-            By creating an account you agree to OrganicFarm's{" "}
-            <span className="text-white/35 hover:text-white/60 cursor-pointer transition-colors">
-              Terms
-            </span>
+          <p className="mt-8 text-center text-xs leading-relaxed text-[#7A8576]">
+            By creating an account you agree to OrganicFarm’s{" "}
+            <span className="font-semibold text-[#5B6559]">Terms</span>
             {" & "}
-            <span className="text-white/35 hover:text-white/60 cursor-pointer transition-colors">
-              Privacy Policy
-            </span>
+            <span className="font-semibold text-[#5B6559]">Privacy Policy</span>
             .
           </p>
         </div>
@@ -419,19 +332,8 @@ export default function Register() {
 
       <style>{`
         @keyframes riseIn {
-          from { opacity:0; transform:translateY(16px); }
+          from { opacity:0; transform:translateY(12px); }
           to   { opacity:1; transform:translateY(0); }
-        }
-        @keyframes shake {
-          0%,100% { transform:translateX(0); }
-          25%      { transform:translateX(-5px); }
-          75%      { transform:translateX(5px); }
-        }
-        @keyframes floatUp {
-          0%   { transform:translateY(0) scale(1);    opacity:0; }
-          10%  { opacity:0.6; }
-          90%  { opacity:0.2; }
-          100% { transform:translateY(-100vh) scale(0.5); opacity:0; }
         }
       `}</style>
     </div>
