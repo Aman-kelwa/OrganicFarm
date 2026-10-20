@@ -1,3 +1,10 @@
+/*
+  OrganicFarm – BuyerDashboard (Design System v2: light & simple)
+  Same tokens and patterns as BuyerOrders.jsx / MyRentals.jsx:
+  page #F6F8F4 · card #FFFFFF · soft green #EAF4E6 · border #E4E8E1 (strong #D5DBD0)
+  text #1F2A1C · muted #5B6559 · subtle #7A8576 · primary #2E7D32 (hover #256628)
+*/
+
 import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -21,6 +28,21 @@ import {
   PlayCircle,
 } from "lucide-react";
 import api from "../services/api";
+
+/* ─── shared style primitives (same as other pages) ─── */
+const container = "max-w-7xl mx-auto px-5 sm:px-8";
+const focusRing =
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2E7D32] focus-visible:ring-offset-2 focus-visible:ring-offset-[#F6F8F4]";
+const btn = `inline-flex items-center justify-center gap-2 rounded-xl px-5 h-11 text-sm font-semibold whitespace-nowrap transition-colors duration-200 active:scale-[0.98] ${focusRing}`;
+const btnPrimary = `${btn} bg-[#2E7D32] text-white hover:bg-[#256628]`;
+const btnOutline = `${btn} border border-[#D5DBD0] bg-white text-[#1F2A1C] hover:bg-[#F6F8F4]`;
+const card = "rounded-2xl border border-[#E4E8E1] bg-white shadow-sm";
+const linkSoft = `inline-flex items-center gap-1 text-sm font-semibold text-[#2E7D32] hover:text-[#256628] transition-colors duration-200 rounded ${focusRing}`;
+
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" &&
+  !!window.matchMedia &&
+  window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ─── reveal on scroll ─── */
 function useReveal(threshold = 0.08) {
@@ -49,8 +71,8 @@ function Reveal({ children, delay = 0, className = "" }) {
     <div
       ref={ref}
       style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-700 ease-out
-        ${v ? "opacity-100 translate-y-0 scale-100" : "opacity-0 translate-y-6 scale-[0.98]"}
+      className={`transition-all duration-[600ms] ease-out motion-reduce:transition-none motion-reduce:opacity-100 motion-reduce:translate-y-0
+        ${v ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
         ${className}`}
     >
       {children}
@@ -64,6 +86,10 @@ function CountUp({ target, prefix = "", suffix = "", duration = 1400 }) {
   const [ref, v] = useReveal();
   useEffect(() => {
     if (!v) return;
+    if (prefersReducedMotion()) {
+      setVal(target);
+      return;
+    }
     let start = null;
     const step = (ts) => {
       if (!start) start = ts;
@@ -85,28 +111,28 @@ function CountUp({ target, prefix = "", suffix = "", duration = 1400 }) {
 /* ─── order status config ─── */
 const ORDER_STATUS = {
   pending: {
-    color: "text-amber-400",
-    bg: "bg-amber-400/12  border-amber-400/30",
+    color: "text-amber-800",
+    bg: "bg-amber-50 border-amber-200",
     icon: Clock,
   },
   confirmed: {
-    color: "text-sky-400",
-    bg: "bg-sky-400/12    border-sky-400/30",
+    color: "text-sky-800",
+    bg: "bg-sky-50 border-sky-200",
     icon: CheckCircle2,
   },
   shipped: {
-    color: "text-purple-400",
-    bg: "bg-purple-400/12 border-purple-400/30",
+    color: "text-indigo-800",
+    bg: "bg-indigo-50 border-indigo-200",
     icon: Truck,
   },
   completed: {
-    color: "text-[#A8E063]",
-    bg: "bg-[#5C9E31]/13  border-[#5C9E31]/32",
+    color: "text-emerald-800",
+    bg: "bg-emerald-50 border-emerald-200",
     icon: CheckCircle2,
   },
   cancelled: {
-    color: "text-red-400",
-    bg: "bg-red-400/12    border-red-400/30",
+    color: "text-red-700",
+    bg: "bg-red-50 border-red-200",
     icon: XCircle,
   },
 };
@@ -115,23 +141,23 @@ const getOrderMeta = (s) => ORDER_STATUS[s] ?? ORDER_STATUS.pending;
 /* ─── rental status config ─── */
 const RENTAL_STATUS = {
   pending: {
-    color: "text-amber-400",
-    bg: "bg-amber-400/12  border-amber-400/30",
+    color: "text-amber-800",
+    bg: "bg-amber-50 border-amber-200",
     icon: Clock,
   },
   active: {
-    color: "text-orange-400",
-    bg: "bg-orange-400/12 border-orange-400/30",
+    color: "text-sky-800",
+    bg: "bg-sky-50 border-sky-200",
     icon: PlayCircle,
   },
   completed: {
-    color: "text-[#A8E063]",
-    bg: "bg-[#5C9E31]/13  border-[#5C9E31]/32",
+    color: "text-emerald-800",
+    bg: "bg-emerald-50 border-emerald-200",
     icon: CheckCircle2,
   },
   cancelled: {
-    color: "text-red-400",
-    bg: "bg-red-400/12    border-red-400/30",
+    color: "text-red-700",
+    bg: "bg-red-50 border-red-200",
     icon: XCircle,
   },
 };
@@ -139,49 +165,99 @@ const getRentalMeta = (s) => RENTAL_STATUS[s] ?? RENTAL_STATUS.pending;
 
 /* ─── quick link cards ─── */
 const QUICK_LINKS = [
-  {
-    label: "Browse Market",
-    to: "/listings",
-    icon: ShoppingBag,
-    color: "from-[#1a3d12] to-[#0d2008]",
-    border: "border-[#2d5c1e]",
-  },
-  {
-    label: "My Orders",
-    to: "/buyer-orders",
-    icon: Package,
-    color: "from-[#1a2e3d] to-[#0d1820]",
-    border: "border-[#1e3a52]",
-  },
-  {
-    label: "My Rentals",
-    to: "/my-rentals",
-    icon: Tractor,
-    color: "from-[#2e1a0d] to-[#1a0d06]",
-    border: "border-[#52321e]",
-  },
-  {
-    label: "Cart",
-    to: "/cart",
-    icon: ShoppingCart,
-    color: "from-[#2a1a3d] to-[#150d20]",
-    border: "border-[#42285c]",
-  },
-  {
-    label: "Notifications",
-    to: "/notifications",
-    icon: Bell,
-    color: "from-[#1a1a0d] to-[#0d0d06]",
-    border: "border-[#3a3a1e]",
-  },
-  {
-    label: "Reviews",
-    to: "/listings",
-    icon: Star,
-    color: "from-[#3d1a1a] to-[#200d0d]",
-    border: "border-[#5c2828]",
-  },
+  { label: "Browse Market", to: "/listings", icon: ShoppingBag },
+  { label: "My Orders", to: "/buyer-orders", icon: Package },
+  { label: "My Rentals", to: "/my-rentals", icon: Tractor },
+  { label: "Cart", to: "/cart", icon: ShoppingCart },
+  { label: "Notifications", to: "/notifications", icon: Bell },
+  { label: "Reviews", to: "/listings", icon: Star },
 ];
+
+const fmtShort = (d) =>
+  new Date(d).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+
+/* ─── shared status badge ─── */
+function StatusBadge({ meta, label }) {
+  const Icon = meta.icon;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 text-[11px] font-semibold capitalize px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}
+    >
+      <Icon size={10} aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
+/* ─── panel header ─── */
+function PanelHeader({ icon: Icon, title, to }) {
+  return (
+    <div className="flex items-center justify-between px-6 py-5 border-b border-[#E4E8E1]">
+      <div className="flex items-center gap-3">
+        <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#EAF4E6] text-[#2E7D32]">
+          <Icon size={17} aria-hidden="true" />
+        </span>
+        <h2 className="text-lg font-semibold">{title}</h2>
+      </div>
+      {to && (
+        <Link to={to} className={linkSoft}>
+          View all <ChevronRight size={14} />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+/* ─── empty block inside a panel ─── */
+function PanelEmpty({ icon: Icon, text, to, cta }) {
+  return (
+    <div className="flex flex-col items-center py-14 text-center">
+      <span className="grid place-items-center w-14 h-14 rounded-2xl bg-[#EAF4E6] text-[#2E7D32] mb-3">
+        <Icon size={24} aria-hidden="true" />
+      </span>
+      <p className="text-[#5B6559] text-sm">{text}</p>
+      <Link to={to} className={`${btnOutline} mt-5 h-10`}>
+        {cta} <ArrowRight size={13} />
+      </Link>
+    </div>
+  );
+}
+
+/* ─── loading skeleton ─── */
+function DashboardSkeleton() {
+  const block = "bg-[#E9EDE6] rounded-xl";
+  return (
+    <div
+      className="min-h-screen bg-[#F6F8F4]"
+      role="status"
+      aria-label="Loading dashboard"
+    >
+      <div
+        className={`${container} pt-28 pb-24 animate-pulse motion-reduce:animate-none`}
+      >
+        <div className={`${block} h-4 w-32 mb-3`} />
+        <div className={`${block} h-9 w-72 mb-3`} />
+        <div className={`${block} h-4 w-96 max-w-full mb-10`} />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          {Array(8)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className={`${card} p-6`}>
+                <div className={`${block} h-10 w-10 mb-4`} />
+                <div className={`${block} h-3 w-24 mb-3`} />
+                <div className={`${block} h-8 w-20`} />
+              </div>
+            ))}
+        </div>
+        <div className="grid lg:grid-cols-3 gap-5">
+          <div className={`${card} lg:col-span-2 h-80`} />
+          <div className={`${card} h-80`} />
+        </div>
+      </div>
+      <span className="sr-only">Loading dashboard…</span>
+    </div>
+  );
+}
 
 /* ════════════════════════════════════════════════════════════ */
 export default function BuyerDashboard() {
@@ -224,7 +300,7 @@ export default function BuyerDashboard() {
   const greeting =
     hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-  /* ── stat cards config — orders + rentals, restored from original API data ── */
+  /* ── stat cards config — orders + rentals ── */
   const STAT_CARDS = stats
     ? [
         {
@@ -232,153 +308,85 @@ export default function BuyerDashboard() {
           value: stats.totalOrders,
           prefix: "",
           icon: ShoppingBag,
-          gradient: "from-[#0f2a0a] via-[#0d1f08] to-[#060A06]",
-          border: "border-[#1e4012]",
-          glow: "shadow-[0_0_30px_rgba(92,158,49,0.12)]",
-          valueColor: "text-white",
-          iconBg: "bg-[#5C9E31]/20 text-[#A8E063]",
         },
         {
           label: "Total Rentals",
           value: stats.totalRentals,
           prefix: "",
           icon: Tractor,
-          gradient: "from-[#2e1a0d] via-[#1a1008] to-[#060A06]",
-          border: "border-[#52321e]",
-          glow: "shadow-[0_0_30px_rgba(217,119,6,0.10)]",
-          valueColor: "text-orange-400",
-          iconBg: "bg-orange-400/15 text-orange-400",
         },
         {
           label: "Purchase Amount",
           value: stats.totalSpent,
           prefix: "₹",
           icon: IndianRupee,
-          gradient: "from-[#0a1f2a] via-[#080f1a] to-[#060A06]",
-          border: "border-[#124030]",
-          glow: "shadow-[0_0_30px_rgba(52,211,153,0.08)]",
-          valueColor: "text-[#A8E063]",
-          iconBg: "bg-emerald-500/15 text-emerald-400",
         },
         {
           label: "Rental Amount",
           value: stats.totalRentalSpent,
           prefix: "₹",
           icon: IndianRupee,
-          gradient: "from-[#1f0a2a] via-[#12081a] to-[#060A06]",
-          border: "border-[#3a1240]",
-          glow: "shadow-[0_0_30px_rgba(168,85,247,0.10)]",
-          valueColor: "text-purple-400",
-          iconBg: "bg-purple-400/15 text-purple-400",
         },
         {
           label: "Pending Orders",
           value: stats.pendingOrders,
           prefix: "",
           icon: Clock,
-          gradient: "from-[#2a1f0a] via-[#1a1208] to-[#060A06]",
-          border: "border-[#40300a]",
-          glow: "shadow-[0_0_30px_rgba(251,191,36,0.08)]",
-          valueColor: "text-amber-400",
-          iconBg: "bg-amber-400/15 text-amber-400",
         },
         {
           label: "Active Rentals",
           value: stats.activeRentals,
           prefix: "",
           icon: PlayCircle,
-          gradient: "from-[#2a140a] via-[#1a0d08] to-[#060A06]",
-          border: "border-[#402210]",
-          glow: "shadow-[0_0_30px_rgba(251,146,60,0.10)]",
-          valueColor: "text-orange-400",
-          iconBg: "bg-orange-400/15 text-orange-400",
         },
         {
           label: "Completed Orders",
           value: stats.completedOrders,
           prefix: "",
           icon: CheckCircle2,
-          gradient: "from-[#0a102a] via-[#080a1a] to-[#060A06]",
-          border: "border-[#101a40]",
-          glow: "shadow-[0_0_30px_rgba(96,165,250,0.08)]",
-          valueColor: "text-sky-400",
-          iconBg: "bg-sky-400/15 text-sky-400",
         },
         {
           label: "Completed Rentals",
           value: stats.completedRentals,
           prefix: "",
           icon: CheckCircle2,
-          gradient: "from-[#0f2a0a] via-[#0d1f08] to-[#060A06]",
-          border: "border-[#1e4012]",
-          glow: "shadow-[0_0_30px_rgba(92,158,49,0.12)]",
-          valueColor: "text-[#A8E063]",
-          iconBg: "bg-[#5C9E31]/20 text-[#A8E063]",
         },
       ]
     : [];
 
-  /* ════════════════════ LOADING SKELETON ════════════════════ */
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#060A06] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="relative w-16 h-16">
-            <div className="absolute inset-0 rounded-full border-2 border-[#5C9E31]/20" />
-            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#5C9E31] animate-spin" />
-          </div>
-          <p className="font-['Space_Mono',monospace] text-xs text-[#5C9E31] tracking-widest uppercase">
-            Loading dashboard…
-          </p>
-        </div>
-      </div>
-    );
-  }
+  /* ════════════════════ LOADING ════════════════════ */
+  if (loading) return <DashboardSkeleton />;
 
   /* ════════════════════ MAIN RENDER ════════════════════ */
   return (
-    <div className="min-h-screen bg-[#060A06] text-white font-['Inter',sans-serif] relative overflow-x-hidden">
-      {/* ── ambient background orbs ── */}
-      <div
-        aria-hidden
-        className="fixed top-0 left-0 w-[700px] h-[700px] rounded-full bg-[#0d2208]/70 blur-[140px] pointer-events-none -translate-x-1/3 -translate-y-1/3"
-      />
-      <div
-        aria-hidden
-        className="fixed top-1/2 right-0  w-[500px] h-[500px] rounded-full bg-[#071a04]/80 blur-[120px] pointer-events-none translate-x-1/3"
-      />
-      <div
-        aria-hidden
-        className="fixed bottom-0 left-1/2 w-[400px] h-[400px] rounded-full bg-[#051503]/60 blur-[100px] pointer-events-none"
-      />
-
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-28 pb-24">
+    <div className="min-h-screen bg-[#F6F8F4] text-[#1F2A1C] font-['Inter',sans-serif] overflow-x-hidden">
+      <div className={`${container} pt-28 pb-24`}>
         {/* ── HEADER ── */}
         <Reveal>
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-12">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
             <div>
-              <p className="font-['Space_Mono',monospace] text-xs text-[#4a9e28] tracking-widest uppercase mb-1">
-                {greeting} 🌱
+              <p className="text-sm font-semibold text-[#2E7D32] mb-1">
+                {greeting}
               </p>
-              <h1 className="font-['Playfair_Display',serif] text-4xl sm:text-5xl font-bold leading-tight">
-                {user?.name?.split(" ")[0] ?? "Buyer"}'s
-                <br />
-                <span className="text-[#A8E063]">Dashboard</span>
+              <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+                {user?.name?.split(" ")[0] ?? "Buyer"}'s Dashboard
               </h1>
-              <p className="text-white/35 text-sm mt-3">
+              <p className="text-[#5B6559] text-sm mt-2">
                 Here's everything happening with your purchases and rentals
                 today.
               </p>
             </div>
             <button
+              type="button"
               onClick={() => fetchDashboard(true)}
               disabled={refreshing}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-[#0f2a0a] border border-[#2d5c1e]
-                text-[#A8E063] hover:bg-[#1a3d12] text-sm font-semibold transition-all active:scale-95
-                disabled:opacity-50 w-fit self-start sm:self-center"
+              className={`${btnOutline} w-fit disabled:opacity-60`}
             >
               {refreshing ? (
-                <Loader2 size={15} className="animate-spin" />
+                <Loader2
+                  size={15}
+                  className="animate-spin motion-reduce:animate-none"
+                />
               ) : (
                 <RefreshCw size={15} />
               )}
@@ -388,123 +396,67 @@ export default function BuyerDashboard() {
         </Reveal>
 
         {/* ── STAT CARDS (orders + rentals, 2 rows of 4) ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-          {STAT_CARDS.map(
-            (
-              {
-                label,
-                value,
-                prefix,
-                icon: Icon,
-                gradient,
-                border,
-                glow,
-                valueColor,
-                iconBg,
-              },
-              i,
-            ) => (
-              <Reveal key={label} delay={i * 60}>
-                <div
-                  className={`group relative rounded-2xl bg-gradient-to-br ${gradient} border ${border} ${glow}
-                p-6 hover:scale-[1.02] hover:brightness-110 transition-all duration-300 overflow-hidden`}
-                >
-                  {/* dot grid texture */}
-                  <div
-                    aria-hidden
-                    className="absolute inset-0 opacity-[0.04]
-                  bg-[radial-gradient(circle_at_1.5px_1.5px,#fff_1px,transparent_0)]
-                  bg-[length:20px_20px]"
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+          {STAT_CARDS.map(({ label, value, prefix, icon: Icon }, i) => (
+            <Reveal key={label} delay={(i % 4) * 60}>
+              <div className={`${card} p-5 sm:p-6 h-full`}>
+                <span className="grid place-items-center w-10 h-10 rounded-xl bg-[#EAF4E6] text-[#2E7D32] mb-4">
+                  <Icon size={19} aria-hidden="true" />
+                </span>
+                <p className="text-[13px] text-[#5B6559] mb-1">{label}</p>
+                <p className="text-2xl sm:text-3xl font-bold">
+                  <CountUp
+                    target={typeof value === "number" ? value : 0}
+                    prefix={prefix}
                   />
-                  <div className="relative">
-                    <span
-                      className={`inline-grid place-items-center w-10 h-10 rounded-xl ${iconBg} mb-4`}
-                    >
-                      <Icon size={19} />
-                    </span>
-                    <p className="text-xs text-white/40 font-['Space_Mono',monospace] uppercase tracking-wider mb-2">
-                      {label}
-                    </p>
-                    <p
-                      className={`font-['Playfair_Display',serif] text-3xl sm:text-4xl font-black ${valueColor}`}
-                    >
-                      <CountUp
-                        target={typeof value === "number" ? value : 0}
-                        prefix={prefix}
-                      />
-                    </p>
-                  </div>
-                </div>
-              </Reveal>
-            ),
-          )}
+                </p>
+              </div>
+            </Reveal>
+          ))}
         </div>
 
         {/* ── MAIN GRID: recent orders + summary sidebar ── */}
-        <div className="grid lg:grid-cols-3 gap-5 mb-12">
+        <div className="grid lg:grid-cols-3 gap-5 mb-10">
           {/* recent orders — spans 2 cols */}
           <Reveal delay={60} className="lg:col-span-2">
-            <div
-              className="h-full rounded-2xl bg-[#080f08] border border-[#162412]
-              shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden"
-            >
-              {/* card header */}
-              <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-[#162412]">
-                <div className="flex items-center gap-3">
-                  <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#5C9E31]/15 text-[#A8E063]">
-                    <Package size={17} />
-                  </span>
-                  <h2 className="font-['Playfair_Display',serif] text-xl font-bold">
-                    Recent Purchases
-                  </h2>
-                </div>
-                <Link
-                  to="/buyer-orders"
-                  className="flex items-center gap-1.5 text-xs text-[#A8E063] hover:text-white
-                    border border-[#5C9E31]/25 hover:border-white/25 px-3 py-1.5 rounded-full
-                    transition-all font-semibold"
-                >
-                  View all <ChevronRight size={13} />
-                </Link>
-              </div>
+            <div className={`h-full ${card} overflow-hidden`}>
+              <PanelHeader
+                icon={Package}
+                title="Recent Purchases"
+                to="/buyer-orders"
+              />
 
-              {/* order list */}
-              <div className="divide-y divide-[#0f1f0d]">
+              <div className="divide-y divide-[#E4E8E1]">
                 {!stats?.recentOrders?.length ? (
-                  <div className="flex flex-col items-center py-16 text-center">
-                    <ShoppingBag size={36} className="text-white/10 mb-3" />
-                    <p className="text-white/35 text-sm">No orders yet</p>
-                    <Link
-                      to="/listings"
-                      className="mt-5 flex items-center gap-1.5 text-xs text-[#A8E063] border border-[#5C9E31]/30
-                        px-4 py-2 rounded-full hover:bg-[#5C9E31]/10 transition-all"
-                    >
-                      Browse market <ArrowRight size={12} />
-                    </Link>
-                  </div>
+                  <PanelEmpty
+                    icon={ShoppingBag}
+                    text="No orders yet"
+                    to="/listings"
+                    cta="Browse market"
+                  />
                 ) : (
                   stats.recentOrders.map((order) => {
                     const meta = getOrderMeta(order.orderStatus);
-                    const StatusIcon = meta.icon;
                     return (
                       <div
                         key={order._id}
-                        className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.025] transition-colors group"
+                        className="flex items-center gap-4 px-6 py-4 hover:bg-[#F6F8F4] transition-colors duration-200 group"
                       >
                         {/* image thumb */}
-                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 shrink-0 border border-white/8">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden bg-[#EAF4E6] shrink-0 border border-[#E4E8E1]">
                           {order.listing?.image ? (
                             <img
                               src={order.listing.image}
                               alt={order.listing.title}
-                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                              loading="lazy"
+                              className="w-full h-full object-cover"
                               onError={(e) => {
                                 e.currentTarget.style.display = "none";
                               }}
                             />
                           ) : (
-                            <div className="w-full h-full grid place-items-center">
-                              <Package size={18} className="text-white/20" />
+                            <div className="w-full h-full grid place-items-center text-[#2E7D32]">
+                              <Package size={18} aria-hidden="true" />
                             </div>
                           )}
                         </div>
@@ -514,28 +466,17 @@ export default function BuyerDashboard() {
                           <p className="font-semibold text-sm truncate">
                             {order.listing?.title ?? "Deleted listing"}
                           </p>
-                          <p className="text-xs text-white/35 mt-0.5">
-                            Qty: {order.quantity} ·{" "}
-                            {new Date(order.createdAt).toLocaleDateString(
-                              "en-IN",
-                              { day: "numeric", month: "short" },
-                            )}
+                          <p className="text-xs text-[#5B6559] mt-0.5">
+                            Qty: {order.quantity} · {fmtShort(order.createdAt)}
                           </p>
                         </div>
 
                         {/* price + status */}
-                        <div className="text-right shrink-0">
-                          <p className="font-bold text-[#A8E063] text-sm">
+                        <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                          <p className="font-bold text-sm">
                             ₹{order.totalPrice?.toLocaleString("en-IN")}
                           </p>
-                          <span
-                            className={`inline-flex items-center gap-1 text-[10px] font-semibold
-                            font-['Space_Mono',monospace] uppercase tracking-wider mt-1.5
-                            px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}
-                          >
-                            <StatusIcon size={9} />
-                            {order.orderStatus}
-                          </span>
+                          <StatusBadge meta={meta} label={order.orderStatus} />
                         </div>
                       </div>
                     );
@@ -545,87 +486,51 @@ export default function BuyerDashboard() {
             </div>
           </Reveal>
 
-          {/* spending summary sidebar — now includes rental spend */}
+          {/* spending summary sidebar */}
           <Reveal delay={120}>
-            <div
-              className="h-full rounded-2xl bg-gradient-to-b from-[#0f2a0a] to-[#080f08]
-              border border-[#1e4012] shadow-[0_0_40px_rgba(0,0,0,0.5)] p-6 flex flex-col gap-6"
-            >
+            <div className={`h-full ${card} p-6 flex flex-col gap-6`}>
               <div className="flex items-center gap-3">
-                <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#5C9E31]/20 text-[#A8E063]">
-                  <TrendingUp size={17} />
+                <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#EAF4E6] text-[#2E7D32]">
+                  <TrendingUp size={17} aria-hidden="true" />
                 </span>
-                <h2 className="font-['Playfair_Display',serif] text-xl font-bold">
-                  Summary
-                </h2>
+                <h2 className="text-lg font-semibold">Summary</h2>
               </div>
 
-              {/* big spend numbers — purchases + rentals side by side */}
+              {/* spend numbers — purchases + rentals */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-xl bg-[#5C9E31]/8 border border-[#5C9E31]/20 p-4 text-center">
-                  <p className="font-['Space_Mono',monospace] text-[10px] text-white/40 uppercase tracking-widest mb-2">
-                    Purchases
-                  </p>
-                  <p className="font-['Playfair_Display',serif] text-2xl font-black text-[#A8E063]">
+                <div className="rounded-xl bg-[#EAF4E6] p-4 text-center">
+                  <p className="text-xs text-[#5B6559] mb-1.5">Purchases</p>
+                  <p className="text-xl font-bold text-[#256628]">
                     <CountUp target={stats?.totalSpent ?? 0} prefix="₹" />
                   </p>
                 </div>
-                <div className="rounded-xl bg-purple-400/8 border border-purple-400/20 p-4 text-center">
-                  <p className="font-['Space_Mono',monospace] text-[10px] text-white/40 uppercase tracking-widest mb-2">
-                    Rentals
-                  </p>
-                  <p className="font-['Playfair_Display',serif] text-2xl font-black text-purple-400">
+                <div className="rounded-xl bg-[#F6F8F4] border border-[#E4E8E1] p-4 text-center">
+                  <p className="text-xs text-[#5B6559] mb-1.5">Rentals</p>
+                  <p className="text-xl font-bold">
                     <CountUp target={stats?.totalRentalSpent ?? 0} prefix="₹" />
                   </p>
                 </div>
               </div>
 
               {/* breakdown */}
-              <div className="space-y-3">
+              <div>
                 {[
-                  {
-                    label: "Orders placed",
-                    value: stats?.totalOrders ?? 0,
-                    color: "text-white",
-                  },
-                  {
-                    label: "Rentals booked",
-                    value: stats?.totalRentals ?? 0,
-                    color: "text-orange-400",
-                  },
-                  {
-                    label: "Pending orders",
-                    value: stats?.pendingOrders ?? 0,
-                    color: "text-amber-400",
-                  },
-                  {
-                    label: "Active rentals",
-                    value: stats?.activeRentals ?? 0,
-                    color: "text-orange-400",
-                  },
-                ].map(({ label, value, color }) => (
+                  { label: "Orders placed", value: stats?.totalOrders ?? 0 },
+                  { label: "Rentals booked", value: stats?.totalRentals ?? 0 },
+                  { label: "Pending orders", value: stats?.pendingOrders ?? 0 },
+                  { label: "Active rentals", value: stats?.activeRentals ?? 0 },
+                ].map(({ label, value }) => (
                   <div
                     key={label}
-                    className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"
+                    className="flex items-center justify-between py-3 border-b border-[#E4E8E1] last:border-0"
                   >
-                    <span className="text-sm text-white/45">{label}</span>
-                    <span
-                      className={`font-bold text-lg font-['Playfair_Display',serif] ${color}`}
-                    >
-                      {value}
-                    </span>
+                    <span className="text-sm text-[#5B6559]">{label}</span>
+                    <span className="font-bold text-base">{value}</span>
                   </div>
                 ))}
               </div>
 
-              {/* mini CTA */}
-              <Link
-                to="/listings"
-                className="flex items-center justify-center gap-2 py-3 rounded-xl
-                  bg-[#5C9E31] hover:bg-[#4e8a28] text-white font-semibold text-sm
-                  transition-all active:scale-95 shadow-[0_0_20px_rgba(92,158,49,0.3)]
-                  hover:shadow-[0_0_30px_rgba(92,158,49,0.45)] mt-auto"
-              >
+              <Link to="/listings" className={`${btnPrimary} mt-auto`}>
                 Shop Now <ArrowRight size={15} />
               </Link>
             </div>
@@ -634,87 +539,52 @@ export default function BuyerDashboard() {
 
         {/* ── RECENT RENTALS ── */}
         <Reveal delay={40}>
-          <div
-            className="rounded-2xl bg-[#080f08] border border-[#162412]
-            shadow-[0_0_40px_rgba(0,0,0,0.5)] overflow-hidden mb-12"
-          >
-            <div className="flex items-center justify-between px-6 pt-6 pb-5 border-b border-[#162412]">
-              <div className="flex items-center gap-3">
-                <span className="grid place-items-center w-9 h-9 rounded-xl bg-orange-400/15 text-orange-400">
-                  <Tractor size={17} />
-                </span>
-                <h2 className="font-['Playfair_Display',serif] text-xl font-bold">
-                  Recent Rentals
-                </h2>
-              </div>
-              <Link
-                to="/my-rentals"
-                className="flex items-center gap-1.5 text-xs text-orange-400 hover:text-white
-                  border border-orange-400/25 hover:border-white/25 px-3 py-1.5 rounded-full
-                  transition-all font-semibold"
-              >
-                View all <ChevronRight size={13} />
-              </Link>
-            </div>
+          <div className={`${card} overflow-hidden mb-10`}>
+            <PanelHeader
+              icon={Tractor}
+              title="Recent Rentals"
+              to="/my-rentals"
+            />
 
-            <div className="divide-y divide-[#0f1f0d]">
+            <div className="divide-y divide-[#E4E8E1]">
               {!stats?.recentRentals?.length ? (
-                <div className="flex flex-col items-center py-16 text-center">
-                  <Tractor size={36} className="text-white/10 mb-3" />
-                  <p className="text-white/35 text-sm">No rentals yet</p>
-                  <Link
-                    to="/listings"
-                    className="mt-5 flex items-center gap-1.5 text-xs text-orange-400 border border-orange-400/30
-                      px-4 py-2 rounded-full hover:bg-orange-400/10 transition-all"
-                  >
-                    Browse equipment <ArrowRight size={12} />
-                  </Link>
-                </div>
+                <PanelEmpty
+                  icon={Tractor}
+                  text="No rentals yet"
+                  to="/listings"
+                  cta="Browse equipment"
+                />
               ) : (
                 stats.recentRentals.map((rental) => {
                   const meta = getRentalMeta(rental.rentalStatus);
-                  const StatusIcon = meta.icon;
                   return (
                     <div
                       key={rental._id}
-                      className="flex items-center gap-4 px-6 py-4 hover:bg-white/[0.025] transition-colors group"
+                      className="flex items-center gap-4 px-6 py-4 hover:bg-[#F6F8F4] transition-colors duration-200"
                     >
-                      <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/5 shrink-0 border border-white/8 grid place-items-center">
-                        <Tractor size={18} className="text-white/30" />
+                      <div className="w-12 h-12 rounded-xl bg-[#EAF4E6] text-[#2E7D32] shrink-0 border border-[#E4E8E1] grid place-items-center">
+                        <Tractor size={18} aria-hidden="true" />
                       </div>
 
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-sm truncate">
                           {rental.listing?.title ?? "Deleted listing"}
                         </p>
-                        <p className="text-xs text-white/35 mt-0.5">
-                          {new Date(rental.startDate).toLocaleDateString(
-                            "en-IN",
-                            { day: "numeric", month: "short" },
-                          )}
+                        <p className="text-xs text-[#5B6559] mt-0.5">
+                          {fmtShort(rental.startDate)}
                           {" – "}
-                          {new Date(rental.endDate).toLocaleDateString(
-                            "en-IN",
-                            { day: "numeric", month: "short" },
-                          )}
+                          {fmtShort(rental.endDate)}
                           {" · "}
                           {rental.totalDays} day
                           {rental.totalDays === 1 ? "" : "s"}
                         </p>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <p className="font-bold text-orange-400 text-sm">
+                      <div className="text-right shrink-0 flex flex-col items-end gap-1.5">
+                        <p className="font-bold text-sm">
                           ₹{rental.totalRent?.toLocaleString("en-IN")}
                         </p>
-                        <span
-                          className={`inline-flex items-center gap-1 text-[10px] font-semibold
-                          font-['Space_Mono',monospace] uppercase tracking-wider mt-1.5
-                          px-2 py-0.5 rounded-full border ${meta.bg} ${meta.color}`}
-                        >
-                          <StatusIcon size={9} />
-                          {rental.rentalStatus}
-                        </span>
+                        <StatusBadge meta={meta} label={rental.rentalStatus} />
                       </div>
                     </div>
                   );
@@ -726,40 +596,23 @@ export default function BuyerDashboard() {
 
         {/* ── QUICK LINKS GRID ── */}
         <Reveal delay={80}>
-          <div className="mb-6">
-            <p className="font-['Space_Mono',monospace] text-xs text-white/30 tracking-widest uppercase mb-5">
-              Quick Access
-            </p>
+          <div className="mb-10">
+            <h2 className="text-lg font-semibold mb-4">Quick access</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {QUICK_LINKS.map(
-                ({ label, to, icon: Icon, color, border }, i) => (
-                  <Reveal key={label} delay={i * 50}>
-                    <Link
-                      to={to}
-                      className={`group flex flex-col items-center gap-3 p-5 rounded-2xl
-                      bg-gradient-to-br ${color} border ${border}
-                      hover:brightness-125 hover:scale-[1.04] hover:-translate-y-0.5
-                      transition-all duration-200 active:scale-95`}
-                    >
-                      <span
-                        className="grid place-items-center w-11 h-11 rounded-xl bg-white/8
-                      group-hover:bg-white/14 transition-colors"
-                      >
-                        <Icon
-                          size={20}
-                          className="text-white/65 group-hover:text-white transition-colors"
-                        />
-                      </span>
-                      <span
-                        className="text-xs font-semibold text-white/55 group-hover:text-white/90
-                      transition-colors text-center leading-tight"
-                      >
-                        {label}
-                      </span>
-                    </Link>
-                  </Reveal>
-                ),
-              )}
+              {QUICK_LINKS.map(({ label, to, icon: Icon }) => (
+                <Link
+                  key={label}
+                  to={to}
+                  className={`group flex flex-col items-center gap-3 p-5 ${card} hover:shadow-md hover:border-[#D5DBD0] transition-shadow duration-200 ${focusRing}`}
+                >
+                  <span className="grid place-items-center w-11 h-11 rounded-xl bg-[#EAF4E6] text-[#2E7D32] group-hover:bg-[#DCEED6] transition-colors duration-200">
+                    <Icon size={20} aria-hidden="true" />
+                  </span>
+                  <span className="text-sm font-medium text-[#1F2A1C] text-center leading-tight">
+                    {label}
+                  </span>
+                </Link>
+              ))}
             </div>
           </div>
         </Reveal>
@@ -768,18 +621,19 @@ export default function BuyerDashboard() {
         {(stats?.recentOrders?.length > 0 ||
           stats?.recentRentals?.length > 0) && (
           <Reveal delay={100}>
-            <div className="rounded-2xl bg-[#080f08] border border-[#162412] p-6">
+            <div className={`${card} p-6`}>
               <div className="flex items-center gap-3 mb-6">
-                <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#5C9E31]/15 text-[#A8E063]">
-                  <Calendar size={16} />
+                <span className="grid place-items-center w-9 h-9 rounded-xl bg-[#EAF4E6] text-[#2E7D32]">
+                  <Calendar size={16} aria-hidden="true" />
                 </span>
-                <h2 className="font-['Playfair_Display',serif] text-xl font-bold">
-                  Activity Timeline
-                </h2>
+                <h2 className="text-lg font-semibold">Activity timeline</h2>
               </div>
 
               <div className="relative">
-                <div className="absolute left-[17px] top-0 bottom-0 w-px bg-gradient-to-b from-[#5C9E31]/40 via-[#5C9E31]/20 to-transparent" />
+                <div
+                  aria-hidden="true"
+                  className="absolute left-[17px] top-2 bottom-2 w-px bg-[#E4E8E1]"
+                />
 
                 <div className="space-y-5">
                   {[
@@ -809,24 +663,23 @@ export default function BuyerDashboard() {
                         : item.rentalStatus;
                       const dateVal = isOrder ? item.createdAt : item.startDate;
                       return (
-                        <div key={item._id} className="flex gap-5 items-start">
+                        <div key={item._id} className="flex gap-4 items-start">
                           <div
-                            className={`relative z-10 grid place-items-center w-9 h-9 rounded-full border shrink-0 ${meta.bg}`}
+                            className={`relative z-10 grid place-items-center w-9 h-9 rounded-full border shrink-0 ${meta.bg} ${meta.color}`}
                           >
-                            <StatusIcon size={14} className={meta.color} />
+                            <StatusIcon size={14} aria-hidden="true" />
                           </div>
                           <div className="flex-1 flex items-center justify-between py-1 min-w-0">
                             <div className="min-w-0">
                               <p className="font-semibold text-sm truncate flex items-center gap-2">
-                                {item.listing?.title ?? "Deleted listing"}
-                                <span
-                                  className="text-[9px] font-['Space_Mono',monospace] uppercase tracking-wider
-                                  px-1.5 py-0.5 rounded-full border border-white/10 text-white/35"
-                                >
-                                  {isOrder ? "order" : "rental"}
+                                <span className="truncate">
+                                  {item.listing?.title ?? "Deleted listing"}
+                                </span>
+                                <span className="shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full bg-[#F6F8F4] border border-[#E4E8E1] text-[#5B6559]">
+                                  {isOrder ? "Order" : "Rental"}
                                 </span>
                               </p>
-                              <p className="text-xs text-white/35 mt-0.5">
+                              <p className="text-xs text-[#5B6559] mt-0.5">
                                 {new Date(dateVal).toLocaleDateString("en-IN", {
                                   weekday: "short",
                                   day: "numeric",
@@ -836,13 +689,11 @@ export default function BuyerDashboard() {
                               </p>
                             </div>
                             <div className="text-right ml-4 shrink-0">
-                              <p
-                                className={`font-bold text-sm ${isOrder ? "text-[#A8E063]" : "text-orange-400"}`}
-                              >
+                              <p className="font-bold text-sm">
                                 ₹{amount?.toLocaleString("en-IN")}
                               </p>
                               <p
-                                className={`text-xs font-semibold mt-0.5 ${meta.color}`}
+                                className={`text-xs font-semibold capitalize mt-0.5 ${meta.color}`}
                               >
                                 {status}
                               </p>
@@ -857,13 +708,6 @@ export default function BuyerDashboard() {
           </Reveal>
         )}
       </div>
-
-      <style>{`
-        @keyframes fadeUp {
-          from { opacity:0; transform:translateY(20px); }
-          to   { opacity:1; transform:translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
