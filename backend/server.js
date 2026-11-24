@@ -23,6 +23,8 @@ const app = express();
 app.use(
   cors({
     origin: [
+      "http://localhost",
+      "http://127.0.0.1",
       "http://localhost:5173",
       "https://organic-farm-beta.vercel.app",
       "https://organic-farm-ohb6pagj5-aman-kelwas-projects.vercel.app",
@@ -38,7 +40,6 @@ connectDB();
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/listings", listingRoutes);
-
 app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/cart", cartRoutes);
